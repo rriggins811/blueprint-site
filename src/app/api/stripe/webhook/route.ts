@@ -3,6 +3,10 @@ import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { PRICING, type CourseAccessKey } from "@/lib/site";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import {
+  sendCoreWelcomeEmail,
+  sendPremiumWelcomeEmail,
+} from "@/lib/email/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -138,5 +142,19 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ received: true, user_id: userId, tier });
+  // Send the tier-appropriate welcome via Resend.
+  // Skips silently if RESEND_API_KEY is missing so this never blocks enrollment.
+  const firstName =
+    session.customer_details?.name?.split(" ")[0] ?? null;
+  const emailResult =
+    tier === "premium"
+      ? await sendPremiumWelcomeEmail({ to: email, firstName })
+      : await sendCoreWelcomeEmail({ to: email, firstName });
+
+  return NextResponse.json({
+    received: true,
+    user_id: userId,
+    tier,
+    welcome_email: emailResult,
+  });
 }
