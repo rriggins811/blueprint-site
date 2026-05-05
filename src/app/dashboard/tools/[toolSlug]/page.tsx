@@ -1,0 +1,85 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { TOOLS, getTool } from "@/lib/tools-registry";
+import { MODULES } from "@/lib/blueprint-modules";
+import { QuickStart7Day } from "@/components/tools/QuickStart7Day";
+import { StartingPointAssessment } from "@/components/tools/StartingPointAssessment";
+import { TransitionCostEstimator } from "@/components/tools/TransitionCostEstimator";
+import { MonthlyCostComparison } from "@/components/tools/MonthlyCostComparison";
+import { ComparisonScorecard } from "@/components/tools/ComparisonScorecard";
+import { NetProceeds } from "@/components/tools/NetProceeds";
+import { AgingCostCalculator } from "@/components/tools/AgingCostCalculator";
+import { BurnoutAssessment } from "@/components/tools/BurnoutAssessment";
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return TOOLS.filter((t) => t.kind === "interactive").map((t) => ({
+    toolSlug: t.slug,
+  }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ toolSlug: string }>;
+}) {
+  const { toolSlug } = await params;
+  const tool = getTool(toolSlug);
+  return { title: tool ? tool.title : "Tool not found" };
+}
+
+const TOOL_COMPONENTS = {
+  "quick-start-7day": QuickStart7Day,
+  "starting-point-assessment": StartingPointAssessment,
+  "transition-cost-estimator": TransitionCostEstimator,
+  "monthly-cost-comparison": MonthlyCostComparison,
+  "comparison-scorecard": ComparisonScorecard,
+  "net-proceeds": NetProceeds,
+  "aging-cost-calculator": AgingCostCalculator,
+  "burnout-assessment": BurnoutAssessment,
+} as const;
+
+export default async function ToolPage({
+  params,
+}: {
+  params: Promise<{ toolSlug: string }>;
+}) {
+  const { toolSlug } = await params;
+  const tool = getTool(toolSlug);
+  if (!tool || tool.kind !== "interactive" || !tool.componentKey) notFound();
+
+  const Component = TOOL_COMPONENTS[tool.componentKey];
+  if (!Component) notFound();
+
+  const parentModule = MODULES.find((m) => m.slug === tool.moduleSlug);
+
+  return (
+    <main className="mx-auto w-full max-w-3xl px-6 py-10">
+      {parentModule ? (
+        <Link
+          href={`/dashboard/${parentModule.slug}`}
+          className="text-sm text-neutral-500 hover:text-neutral-900"
+        >
+          &larr; Module {parentModule.number}: {parentModule.title}
+        </Link>
+      ) : (
+        <Link href="/dashboard" className="text-sm text-neutral-500 hover:text-neutral-900">
+          &larr; All modules
+        </Link>
+      )}
+
+      <header className="mt-4">
+        <p className="text-sm font-medium uppercase tracking-wide text-neutral-500">
+          Tool {tool.slug.replace("tool-", "").toUpperCase()}
+        </p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">{tool.title}</h1>
+        <p className="mt-2 text-neutral-600">{tool.description}</p>
+      </header>
+
+      <section className="mt-8">
+        <Component />
+      </section>
+    </main>
+  );
+}

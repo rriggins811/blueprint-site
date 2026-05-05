@@ -4,6 +4,7 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import { MODULES } from "@/lib/blueprint-modules";
 import { loadModuleContent } from "@/lib/modules-content";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { toolsForModule } from "@/lib/tools-registry";
 
 export const dynamicParams = false;
 
@@ -88,6 +89,8 @@ export default async function ModulePage({
 
       <article className="prose-blueprint mt-10">{rendered}</article>
 
+      <ModuleTools moduleSlug={content.module.slug} />
+
       <footer className="mt-12 flex items-center justify-between gap-4 border-t border-neutral-200 pt-6 text-sm">
         {content.prev ? (
           <Link
@@ -117,6 +120,48 @@ export default async function ModulePage({
         ) : null}
       </footer>
     </main>
+  );
+}
+
+function ModuleTools({ moduleSlug }: { moduleSlug: string }) {
+  const tools = toolsForModule(moduleSlug);
+  if (!tools.length) return null;
+
+  return (
+    <section className="mt-12 rounded-lg border border-neutral-200 bg-neutral-50 p-6">
+      <h2 className="text-lg font-semibold tracking-tight">Tools for this module</h2>
+      <ul className="mt-4 space-y-3">
+        {tools.map((t) => (
+          <li key={t.slug}>
+            {t.kind === "interactive" ? (
+              <Link
+                href={`/dashboard/tools/${t.slug}`}
+                className="block rounded-md border border-neutral-200 bg-white p-4 transition hover:border-amber-600"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-medium text-neutral-900">{t.title}</span>
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                    Interactive
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-neutral-600">{t.description}</p>
+              </Link>
+            ) : (
+              <div className="rounded-md border border-neutral-200 bg-white p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-medium text-neutral-900">{t.title}</span>
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+                    PDF
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-neutral-600">{t.description}</p>
+                <p className="mt-2 text-xs text-neutral-400">PDF download coming soon.</p>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
