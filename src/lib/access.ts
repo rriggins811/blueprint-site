@@ -32,7 +32,18 @@ export type CourseAccess = {
 const FREE_DEFAULT: CourseAccess = {
   tier: "free",
   modules: ["module-00"],
-  tools: ["prepquiz", "net-proceeds-calculator", "smart-prep-budget-calculator"],
+  // Free tier tool list (decided May 5 during Phase 2 review):
+  //   prepquiz                     ↔ tool-01a (Starting Point Assessment)
+  //   net-proceeds-calculator      ↔ tool-09a (Net Proceeds Calculator)
+  //   7-day-quick-start-checklist  ↔ tool-00a (Quick Start 7-Day Checklist)
+  // Smart Prep Budget Calculator was swapped OUT (now paid-only) since it
+  // delivers more value as a paid-tier draw and Module 00 already references
+  // the 7-Day Checklist as a free toolkit item.
+  tools: [
+    "prepquiz",
+    "net-proceeds-calculator",
+    "7-day-quick-start-checklist",
+  ],
 };
 
 export function freeTierAccess(now = new Date()): CourseAccess {

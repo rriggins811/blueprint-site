@@ -83,7 +83,11 @@ export default async function ModulePage({
           ) : null}
         </p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-          {frontmatter.title ?? content.module.title}
+          {/* Canonical title from MODULES — frontmatter.title is the .docx
+              source title which differs from the dashboard card. Ryan picked
+              dashboard card titles as the one canonical name (see
+              BLUEPRINT_MODULE_UPDATES_NEEDED.md). */}
+          {content.module.title}
         </h1>
         {frontmatter.subtitle ? (
           <p className="mt-2 text-sm text-neutral-500">{frontmatter.subtitle}</p>

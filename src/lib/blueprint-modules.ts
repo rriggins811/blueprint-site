@@ -169,7 +169,9 @@ export const MODULES: Module[] = [
     title: "Completion",
     summary:
       "Final completion assessment, what is next, prep for ongoing work.",
-    toolCount: 3,
+    // Module 19 has only the Completion Assessment (1 tool). The two Premium
+    // tools (Session Prep, Intake Form) live under module-19-premium.
+    toolCount: 1,
   },
   {
     slug: "module-19-premium",

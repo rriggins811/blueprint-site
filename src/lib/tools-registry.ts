@@ -44,6 +44,7 @@ const OVERRIDES: Record<
     description:
       "Your first week, day by day. Check off the small wins so the family stays moving forward.",
     componentKey: "quick-start-7day",
+    canonicalSlug: "7-day-quick-start-checklist",
   },
   "tool-00b": {
     description:

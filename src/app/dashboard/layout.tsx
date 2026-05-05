@@ -31,6 +31,7 @@ export default async function DashboardLayout({
 
   const access = parseCourseAccess(profile?.course_access);
   const isPremium = access.tier === "premium";
+  const isCore = access.tier === "core";
   const isFree = access.tier === "free";
 
   // No row at all (or unknown tier with empty arrays) = no Blueprint access at all.
@@ -91,7 +92,7 @@ export default async function DashboardLayout({
             </span>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
-            {isFree ? (
+            {isFree || isCore ? (
               <Link
                 href="/pricing"
                 className="font-medium text-amber-700 hover:text-amber-800"
@@ -119,6 +120,7 @@ export default async function DashboardLayout({
         </div>
       </header>
       {isFree ? <FreePlanBanner /> : null}
+      {isCore ? <CoreUpgradeBanner /> : null}
       {isPremium ? <PremiumBanner expiresAt={premiumExpiresAt} /> : null}
       <div className="flex-1">{children}</div>
     </div>
@@ -143,6 +145,37 @@ function FreePlanBanner() {
         >
           See pricing
         </Link>
+      </div>
+    </aside>
+  );
+}
+
+function CoreUpgradeBanner() {
+  // Tier-aware Core upsell banner. Posts to /api/checkout with upgrade=1
+  // so the server applies the $50-off coupon (server-side gate verifies the
+  // user's current tier is core before honoring it).
+  return (
+    <aside className="border-b border-amber-200 bg-amber-50">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
+        <div className="text-sm">
+          <p className="font-semibold text-amber-900">
+            Get Premium for $50 off. $247 instead of $297.
+          </p>
+          <p className="mt-0.5 text-xs text-amber-800">
+            Adds a personalized transition plan, a 60-minute strategy call
+            with Ryan, and 90 days of email support.
+          </p>
+        </div>
+        <form action="/api/checkout" method="POST">
+          <input type="hidden" name="tier" value="premium" />
+          <input type="hidden" name="upgrade" value="1" />
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800"
+          >
+            Upgrade to Premium $247
+          </button>
+        </form>
       </div>
     </aside>
   );

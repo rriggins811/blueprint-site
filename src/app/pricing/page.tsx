@@ -65,9 +65,10 @@ export default async function PricingPage() {
           tagline="The complete system plus Ryan in your corner."
           bullets={[
             "Everything in Core.",
+            "Personalized transition plan tailored to your situation.",
             "One 60-minute strategy call with Ryan.",
             "90 days of priority email support.",
-            "Premium intake form and personalized prep.",
+            "Premium intake doc to prep your call.",
           ]}
           highlighted
           alreadyOwned={alreadyPremium}

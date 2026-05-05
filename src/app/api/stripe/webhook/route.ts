@@ -168,6 +168,17 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Read what the customer ACTUALLY paid (in cents → whole dollars). This
+  // matters when a Core→Premium upgrade applied the $50-off coupon so the
+  // amount is $247, not $297. Fall back to the list price if Stripe didn't
+  // populate amount_total for some reason.
+  const paidUsd =
+    typeof session.amount_total === "number"
+      ? Math.round(session.amount_total / 100)
+      : tier === "core"
+      ? PRICING.core.priceUsd
+      : PRICING.premium.priceUsd;
+
   // Fan out to Make + GHL + Kit + Twilio. Wrapped in after() so Vercel
   // keeps the function alive through the fetch calls.
   after(
@@ -176,8 +187,7 @@ export async function POST(req: NextRequest) {
       firstName: firstName ?? undefined,
       lastName,
       tier,
-      amount_usd:
-        tier === "core" ? PRICING.core.priceUsd : PRICING.premium.priceUsd,
+      amount_usd: paidUsd,
       stripe_session_id: session.id,
       stripe_customer_id: stripeCustomerId ?? undefined,
       user_id: userId,
