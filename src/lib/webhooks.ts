@@ -26,10 +26,12 @@ async function kitAddTag(
     return;
   }
   try {
+    // Kit v4 uses X-Kit-Api-Key for raw API keys.
+    // Authorization: Bearer is reserved for OAuth access tokens.
     const res = await fetch(`${KIT_BASE}/tags/${tagId}/subscribers`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${key}`,
+        "X-Kit-Api-Key": key,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
