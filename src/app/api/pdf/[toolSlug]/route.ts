@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getTool } from "@/lib/tools-registry";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { parseCourseAccess, isToolUnlocked } from "@/lib/access";
 
 export const runtime = "nodejs";
 
@@ -31,15 +32,10 @@ export async function GET(
     .select("course_access")
     .eq("user_id", user.id)
     .maybeSingle();
-  const access = (profile?.course_access ?? {}) as Record<string, unknown>;
-  const hasCore = Boolean(access.blueprint_core);
-  const hasPremium = Boolean(access.blueprint_premium);
+  const access = parseCourseAccess(profile?.course_access);
 
-  if (!hasCore && !hasPremium) {
-    return NextResponse.json({ error: "No course access" }, { status: 403 });
-  }
-  if (tool.premiumOnly && !hasPremium) {
-    return NextResponse.json({ error: "Premium required" }, { status: 403 });
+  if (!isToolUnlocked(tool.slug, access)) {
+    return NextResponse.redirect(new URL("/pricing", req.url));
   }
 
   // Use the admin client to mint a signed URL. Bucket is private.

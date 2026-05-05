@@ -5,6 +5,7 @@ import { MODULES } from "@/lib/blueprint-modules";
 import { loadModuleContent } from "@/lib/modules-content";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { toolsForModule } from "@/lib/tools-registry";
+import { parseCourseAccess, isModuleUnlocked, isToolUnlocked } from "@/lib/access";
 
 export const dynamicParams = false;
 
@@ -34,23 +35,25 @@ export default async function ModulePage({
   const content = await loadModuleContent(moduleSlug);
   if (!content) notFound();
 
-  // Premium-only modules require a premium grant.
-  if (content.module.premiumOnly) {
-    const supabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) redirect("/login");
+  // Tier guard. Direct URL to a locked module redirects to /pricing.
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-    const { data: profile } = await supabase
-      .from("user_profile")
-      .select("course_access")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const access = (profile?.course_access ?? {}) as Record<string, unknown>;
-    if (!access.blueprint_premium) {
+  const { data: profile } = await supabase
+    .from("user_profile")
+    .select("course_access")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const access = parseCourseAccess(profile?.course_access);
+
+  if (!isModuleUnlocked(content.module.slug, access)) {
+    if (content.module.premiumOnly && access.tier === "core") {
       return <PremiumGate />;
     }
+    redirect("/pricing");
   }
 
   const { content: rendered, frontmatter } = await compileMDX<{
@@ -89,7 +92,7 @@ export default async function ModulePage({
 
       <article className="prose-blueprint mt-10">{rendered}</article>
 
-      <ModuleTools moduleSlug={content.module.slug} />
+      <ModuleTools moduleSlug={content.module.slug} access={access} />
 
       <footer className="mt-12 flex items-center justify-between gap-4 border-t border-neutral-200 pt-6 text-sm">
         {content.prev ? (
@@ -123,7 +126,13 @@ export default async function ModulePage({
   );
 }
 
-function ModuleTools({ moduleSlug }: { moduleSlug: string }) {
+function ModuleTools({
+  moduleSlug,
+  access,
+}: {
+  moduleSlug: string;
+  access: ReturnType<typeof parseCourseAccess>;
+}) {
   const tools = toolsForModule(moduleSlug);
   if (!tools.length) return null;
 
@@ -131,42 +140,73 @@ function ModuleTools({ moduleSlug }: { moduleSlug: string }) {
     <section className="mt-12 rounded-lg border border-neutral-200 bg-neutral-50 p-6">
       <h2 className="text-lg font-semibold tracking-tight">Tools for this module</h2>
       <ul className="mt-4 space-y-3">
-        {tools.map((t) => (
-          <li
-            key={t.slug}
-            className="rounded-md border border-neutral-200 bg-white p-4"
-          >
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="font-medium text-neutral-900">{t.title}</span>
-              {t.componentKey ? (
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                  Interactive
-                </span>
-              ) : (
-                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
-                  PDF
-                </span>
-              )}
-            </div>
-            <p className="mt-1 text-sm text-neutral-600">{t.description}</p>
-            <div className="mt-3 flex flex-wrap gap-3 text-sm">
-              {t.componentKey ? (
-                <Link
-                  href={`/dashboard/tools/${t.slug}`}
-                  className="inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
+        {tools.map((t) => {
+          const unlocked = isToolUnlocked(t.slug, access);
+          return (
+            <li
+              key={t.slug}
+              className={
+                "rounded-md border p-4 " +
+                (unlocked ? "border-neutral-200 bg-white" : "border-neutral-200 bg-neutral-100/60")
+              }
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <span
+                  className={
+                    "font-medium " + (unlocked ? "text-neutral-900" : "text-neutral-500")
+                  }
                 >
-                  Open the calculator
-                </Link>
-              ) : null}
-              <a
-                href={`/api/pdf/${t.slug}`}
-                className="inline-flex items-center rounded-md border border-neutral-300 px-3 py-1.5 font-medium text-neutral-700 hover:border-neutral-500"
+                  {t.title}
+                </span>
+                {!unlocked ? (
+                  <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-700">
+                    Locked
+                  </span>
+                ) : t.componentKey ? (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                    Interactive
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+                    PDF
+                  </span>
+                )}
+              </div>
+              <p
+                className={
+                  "mt-1 text-sm " + (unlocked ? "text-neutral-600" : "text-neutral-500")
+                }
               >
-                Download PDF
-              </a>
-            </div>
-          </li>
-        ))}
+                {t.description}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-3 text-sm">
+                {unlocked && t.componentKey ? (
+                  <Link
+                    href={`/dashboard/tools/${t.slug}`}
+                    className="inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
+                  >
+                    Open the calculator
+                  </Link>
+                ) : null}
+                {unlocked ? (
+                  <a
+                    href={`/api/pdf/${t.slug}`}
+                    className="inline-flex items-center rounded-md border border-neutral-300 px-3 py-1.5 font-medium text-neutral-700 hover:border-neutral-500"
+                  >
+                    Download PDF
+                  </a>
+                ) : (
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
+                  >
+                    Unlock with Blueprint Core. $47
+                  </Link>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

@@ -14,7 +14,8 @@ export type InteractiveToolKey =
   | "comparison-scorecard"
   | "net-proceeds"
   | "aging-cost-calculator"
-  | "burnout-assessment";
+  | "burnout-assessment"
+  | "smart-prep-budget";
 
 export type Tool = {
   slug: string;
@@ -26,12 +27,16 @@ export type Tool = {
   // If unset, the tool is PDF-only (download from Supabase Storage).
   componentKey?: InteractiveToolKey;
   premiumOnly?: boolean;
+  // Canonical name used in course_access.tools for free-tier matching.
+  // URL slugs stay tool-NNX; this is the friendly name the rest of the
+  // architecture (RSS site, Make.com, marketing) refers to.
+  canonicalSlug?: string;
 };
 
 // Hand-curated overrides keyed by slug.
 const OVERRIDES: Record<
   string,
-  Partial<Pick<Tool, "title" | "description" | "componentKey" | "premiumOnly">>
+  Partial<Pick<Tool, "title" | "description" | "componentKey" | "premiumOnly" | "canonicalSlug">>
 > = {
   // Module 00
   "tool-00a": {
@@ -51,6 +56,7 @@ const OVERRIDES: Record<
     description:
       "Where is your family right now? Six questions, one personalized starting plan.",
     componentKey: "starting-point-assessment",
+    canonicalSlug: "prepquiz",
   },
   "tool-01b": {
     description: "Realistic timeline for your situation in 5 minutes.",
@@ -78,7 +84,13 @@ const OVERRIDES: Record<
   "tool-04d": { description: "Worksheet for measuring and planning the new space." },
 
   // Module 05
-  "tool-05a": { description: "Smart prep budget for the home before sale or move." },
+  "tool-05a": {
+    title: "Smart Prep Budget Calculator",
+    description:
+      "Allocate a tight prep budget across what actually moves the needle. Put $5K to work, not $50K.",
+    componentKey: "smart-prep-budget",
+    canonicalSlug: "smart-prep-budget-calculator",
+  },
   "tool-05b": { description: "Walk the home with this safety checklist in hand." },
   "tool-05c": { description: "Compare contractor bids side by side." },
   "tool-05d": { description: "Score and rank repairs by priority." },
@@ -122,6 +134,7 @@ const OVERRIDES: Record<
     description:
       "Sale price minus everything that comes off the top. Know what your family actually walks away with.",
     componentKey: "net-proceeds",
+    canonicalSlug: "net-proceeds-calculator",
   },
   "tool-09b": { description: "Checklist to keep on the call with a cash buyer." },
   "tool-09c": { description: "What to expect with a traditional listing." },
@@ -213,6 +226,7 @@ export const TOOLS: Tool[] = RAW_TOOLS.map((raw) => {
     description: o.description ?? defaultDescription(o.title ?? raw.title),
     componentKey: o.componentKey,
     premiumOnly: o.premiumOnly,
+    canonicalSlug: o.canonicalSlug,
   };
 });
 

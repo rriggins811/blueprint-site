@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { TOOLS, getTool } from "@/lib/tools-registry";
 import { MODULES } from "@/lib/blueprint-modules";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { parseCourseAccess, isToolUnlocked } from "@/lib/access";
 import { QuickStart7Day } from "@/components/tools/QuickStart7Day";
 import { StartingPointAssessment } from "@/components/tools/StartingPointAssessment";
 import { TransitionCostEstimator } from "@/components/tools/TransitionCostEstimator";
@@ -10,6 +12,7 @@ import { ComparisonScorecard } from "@/components/tools/ComparisonScorecard";
 import { NetProceeds } from "@/components/tools/NetProceeds";
 import { AgingCostCalculator } from "@/components/tools/AgingCostCalculator";
 import { BurnoutAssessment } from "@/components/tools/BurnoutAssessment";
+import { SmartPrepBudget } from "@/components/tools/SmartPrepBudget";
 
 export const dynamicParams = false;
 
@@ -38,6 +41,7 @@ const TOOL_COMPONENTS = {
   "net-proceeds": NetProceeds,
   "aging-cost-calculator": AgingCostCalculator,
   "burnout-assessment": BurnoutAssessment,
+  "smart-prep-budget": SmartPrepBudget,
 } as const;
 
 export default async function ToolPage({
@@ -51,6 +55,22 @@ export default async function ToolPage({
 
   const Component = TOOL_COMPONENTS[tool.componentKey];
   if (!Component) notFound();
+
+  // Tier guard: direct URL to a locked tool redirects to /pricing.
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: profile } = await supabase
+    .from("user_profile")
+    .select("course_access")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const access = parseCourseAccess(profile?.course_access);
+  if (!isToolUnlocked(tool.slug, access)) {
+    redirect("/pricing");
+  }
 
   const parentModule = MODULES.find((m) => m.slug === tool.moduleSlug);
 

@@ -2,7 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { signOut } from "./actions";
-import { SITE, premiumExpiresFromGrant } from "@/lib/site";
+import { SITE } from "@/lib/site";
+import {
+  parseCourseAccess,
+  isPaid,
+  type CourseAccess,
+} from "@/lib/access";
 
 export default async function DashboardLayout({
   children,
@@ -24,13 +29,13 @@ export default async function DashboardLayout({
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const access = (profile?.course_access ?? {}) as Record<string, unknown>;
-  const hasCore = Boolean(access.blueprint_core);
-  const hasPremium = Boolean(access.blueprint_premium);
-  const premiumGrant = access.blueprint_premium;
-  const premiumExpiresAt = hasPremium ? premiumExpiresFromGrant(premiumGrant) : null;
+  const access = parseCourseAccess(profile?.course_access);
+  const isPremium = access.tier === "premium";
+  const isFree = access.tier === "free";
 
-  if (!hasCore && !hasPremium) {
+  // No row at all (or unknown tier with empty arrays) = no Blueprint access at all.
+  // This is a SeniorSafe-only user who navigated to /dashboard.
+  if (!profile || (!isPaid(access) && access.modules.length === 0 && access.tools.length === 0)) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
@@ -38,7 +43,7 @@ export default async function DashboardLayout({
         </h1>
         <p className="mt-3 text-sm text-neutral-600">
           The email <strong>{user.email}</strong> does not have a Blueprint
-          purchase on file. If you bought under a different email, log out and
+          account on file. If you signed up under a different email, log out and
           log back in with that one.
         </p>
         <Link
@@ -56,20 +61,45 @@ export default async function DashboardLayout({
     );
   }
 
+  const premiumExpiresAt =
+    isPremium && access.purchased_at
+      ? new Date(
+          new Date(access.purchased_at).getTime() +
+            SITE.premiumSupportDays * 24 * 60 * 60 * 1000
+        )
+      : null;
+
+  const tierBadge = isPremium ? "Premium" : access.tier === "core" ? "Core" : "Free";
+  const tierBadgeColor = isPremium
+    ? "bg-amber-100 text-amber-800"
+    : access.tier === "core"
+    ? "bg-emerald-100 text-emerald-800"
+    : "bg-neutral-200 text-neutral-700";
+
   return (
     <div className="flex min-h-full flex-col">
       <header className="border-b border-neutral-200">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/dashboard" className="font-semibold tracking-tight">
             {SITE.shortName}
-            {hasPremium ? (
-              <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                Premium
-              </span>
-            ) : null}
+            <span
+              className={
+                "ml-2 rounded-full px-2 py-0.5 text-xs font-medium " + tierBadgeColor
+              }
+            >
+              {tierBadge}
+            </span>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
-            {hasPremium ? (
+            {isFree ? (
+              <Link
+                href="/pricing"
+                className="font-medium text-amber-700 hover:text-amber-800"
+              >
+                Upgrade
+              </Link>
+            ) : null}
+            {isPremium ? (
               <a
                 href={`mailto:${SITE.supportEmail}?subject=Premium%20support`}
                 className="text-neutral-600 hover:text-neutral-900"
@@ -88,11 +118,33 @@ export default async function DashboardLayout({
           </nav>
         </div>
       </header>
-      {hasPremium ? (
-        <PremiumBanner expiresAt={premiumExpiresAt} />
-      ) : null}
+      {isFree ? <FreePlanBanner /> : null}
+      {isPremium ? <PremiumBanner expiresAt={premiumExpiresAt} /> : null}
       <div className="flex-1">{children}</div>
     </div>
+  );
+}
+
+function FreePlanBanner() {
+  return (
+    <aside className="border-b border-amber-200 bg-amber-50">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
+        <div className="text-sm">
+          <p className="font-semibold text-amber-900">
+            Free Plan. Unlock all 21 modules and 71 tools for $47.
+          </p>
+          <p className="mt-0.5 text-xs text-amber-800">
+            One-time payment. Lifetime access. No recurring charge.
+          </p>
+        </div>
+        <Link
+          href="/pricing"
+          className="inline-flex items-center justify-center rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800"
+        >
+          See pricing
+        </Link>
+      </div>
+    </aside>
   );
 }
 
@@ -102,7 +154,7 @@ function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
         <div className="text-sm">
           <p className="font-semibold text-amber-900">
-            Premium — book your 60-minute strategy call with Ryan
+            Premium. Book your 60-minute strategy call with Ryan.
           </p>
           {expiresAt ? (
             <p className="mt-0.5 text-xs text-amber-800">
@@ -128,3 +180,6 @@ function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {
     </aside>
   );
 }
+
+// Re-export type so other dashboard files can import without pulling parseCourseAccess directly.
+export type { CourseAccess };

@@ -33,10 +33,7 @@ export async function POST(req: NextRequest) {
     cancel_url: `${SITE.url}/?canceled=1`,
     customer_email: user?.email,
     client_reference_id: user?.id,
-    metadata: {
-      tier,
-      course_access_key: product.courseAccessKey,
-    },
+    metadata: { tier },
   });
 
   if (!session.url) {
