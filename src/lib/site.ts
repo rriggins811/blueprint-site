@@ -8,7 +8,20 @@ export const SITE = {
   rssSite: "https://rigginsstrategicsolutions.com",
   seniorsafeSite: "https://seniorsafeapp.com",
   supportEmail: "support@rigginsstrategicsolutions.com",
+  premiumCalBookingUrl:
+    process.env.NEXT_PUBLIC_CAL_BOOKING_URL ??
+    "https://cal.com/rriggins/blueprint-strategy",
+  premiumSupportDays: 90,
 } as const;
+
+export function premiumExpiresFromGrant(grant: unknown): Date | null {
+  if (!grant || typeof grant !== "object") return null;
+  const g = grant as { purchased_at?: string };
+  if (!g.purchased_at) return null;
+  const start = new Date(g.purchased_at);
+  if (Number.isNaN(start.getTime())) return null;
+  return new Date(start.getTime() + SITE.premiumSupportDays * 24 * 60 * 60 * 1000);
+}
 
 export const PRICING = {
   core: {

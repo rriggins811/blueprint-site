@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { signOut } from "./actions";
-import { SITE } from "@/lib/site";
+import { SITE, premiumExpiresFromGrant } from "@/lib/site";
 
 export default async function DashboardLayout({
   children,
@@ -18,7 +18,6 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Confirm the user has at least Blueprint Core access on their profile.
   const { data: profile } = await supabase
     .from("user_profile")
     .select("course_access, first_name")
@@ -28,6 +27,8 @@ export default async function DashboardLayout({
   const access = (profile?.course_access ?? {}) as Record<string, unknown>;
   const hasCore = Boolean(access.blueprint_core);
   const hasPremium = Boolean(access.blueprint_premium);
+  const premiumGrant = access.blueprint_premium;
+  const premiumExpiresAt = hasPremium ? premiumExpiresFromGrant(premiumGrant) : null;
 
   if (!hasCore && !hasPremium) {
     return (
@@ -47,10 +48,7 @@ export default async function DashboardLayout({
           Back to the Blueprint
         </Link>
         <form action={signOut} className="mt-3">
-          <button
-            type="submit"
-            className="text-sm text-neutral-500 underline"
-          >
+          <button type="submit" className="text-sm text-neutral-500 underline">
             Log out
           </button>
         </form>
@@ -70,17 +68,63 @@ export default async function DashboardLayout({
               </span>
             ) : null}
           </Link>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="text-sm text-neutral-600 hover:text-neutral-900"
-            >
-              Log out
-            </button>
-          </form>
+          <nav className="flex items-center gap-4 text-sm">
+            {hasPremium ? (
+              <a
+                href={`mailto:${SITE.supportEmail}?subject=Premium%20support`}
+                className="text-neutral-600 hover:text-neutral-900"
+              >
+                Email Ryan
+              </a>
+            ) : null}
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="text-neutral-600 hover:text-neutral-900"
+              >
+                Log out
+              </button>
+            </form>
+          </nav>
         </div>
       </header>
+      {hasPremium ? (
+        <PremiumBanner expiresAt={premiumExpiresAt} />
+      ) : null}
       <div className="flex-1">{children}</div>
     </div>
+  );
+}
+
+function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {
+  return (
+    <aside className="border-b border-amber-200 bg-amber-50">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
+        <div className="text-sm">
+          <p className="font-semibold text-amber-900">
+            Premium — book your 60-minute strategy call with Ryan
+          </p>
+          {expiresAt ? (
+            <p className="mt-0.5 text-xs text-amber-800">
+              Premium support active until{" "}
+              {expiresAt.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+              .
+            </p>
+          ) : null}
+        </div>
+        <a
+          href={SITE.premiumCalBookingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800"
+        >
+          Book the call
+        </a>
+      </div>
+    </aside>
   );
 }
