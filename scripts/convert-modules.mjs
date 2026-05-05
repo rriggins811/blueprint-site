@@ -49,6 +49,13 @@ function fixBoldItalicCollision(md) {
   return md.replace(/\*\*\*(?=[A-Za-z0-9])/g, "** *");
 }
 
+// `**X:**Word` (no space between bold-close and the next word) leaves literal
+// asterisks in the rendered output for some markdown configurations. Add a
+// space so the bold parses cleanly and the prose flows.
+function fixBoldNoSpaceAfter(md) {
+  return md.replace(/(\*\*[^*\n]+\*\*)(?=[A-Za-z0-9])/g, "$1 ");
+}
+
 // Source-level corrections Ryan has flagged.
 // "The Other Side of the Deal" is a stale book name in the .docx files.
 // The correct name is "The Other Side of the Conversation".
@@ -170,8 +177,10 @@ async function main() {
     const buffer = await readFile(path.join(SOURCE_DIR, filename));
     const { value: rawMd } = await mammoth.convertToMarkdown({ buffer });
     const cleaned = applyContentCorrections(
-      fixBoldItalicCollision(
-        normalizeBold(unescapePunctuation(cleanMarkdown(rawMd)))
+      fixBoldNoSpaceAfter(
+        fixBoldItalicCollision(
+          normalizeBold(unescapePunctuation(cleanMarkdown(rawMd)))
+        )
       )
     );
     const { title, subtitle, body } = rewriteContent(cleaned);
