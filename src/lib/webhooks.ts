@@ -154,9 +154,13 @@ function nameFor(p: { firstName?: string; lastName?: string }): string {
 }
 
 // ---- Public orchestrators ----
+//
+// These return Promise<unknown[]> rather than firing internally. Callers wrap
+// in `after()` from next/server so Vercel keeps the function alive until the
+// fan-out completes. Bare fire-and-forget (`void Promise.all(...)`) is unreliable
+// on Vercel because the runtime may terminate the worker as soon as the route
+// returns its response, cancelling in-flight fetches.
 
-// Fire-and-forget on free signup. Returns immediately.
-// Channels (parallel): Make webhook, Kit tag, Twilio SMS, GHL legacy webhook.
 export function notifyFreeSignup(payload: {
   email: string;
   firstName?: string;
@@ -165,11 +169,11 @@ export function notifyFreeSignup(payload: {
   source: string;
   signed_up_at: string;
   user_id: string;
-}): void {
+}): Promise<unknown[]> {
   const makePayload = { ...payload, kind: "free_signup" };
   const sms = `New free Blueprint signup: ${nameFor(payload)} (${payload.email})`;
 
-  void Promise.all([
+  return Promise.all([
     postJson(process.env.MAKE_FREESIGNUP_WEBHOOK_URL, makePayload, "make-free"),
     postJson(process.env.GHL_LEGACY_FREESIGNUP_WEBHOOK_URL, makePayload, "ghl-free"),
     kitAddTag(
@@ -181,8 +185,6 @@ export function notifyFreeSignup(payload: {
   ]);
 }
 
-// Fire-and-forget on new paid customer. Returns immediately.
-// Channels (parallel): Make webhook, Kit tag (Core or Premium), Twilio SMS, GHL legacy.
 export function notifyNewPaidCustomer(payload: {
   email: string;
   firstName?: string;
@@ -193,7 +195,7 @@ export function notifyNewPaidCustomer(payload: {
   stripe_customer_id?: string;
   user_id: string;
   upgraded_from?: "free" | "core" | "premium";
-}): void {
+}): Promise<unknown[]> {
   const makePayload = { ...payload, kind: "new_paid" };
   const tagId =
     payload.tier === "premium"
@@ -201,7 +203,7 @@ export function notifyNewPaidCustomer(payload: {
       : KIT_TAG_CORE_CUSTOMER;
   const sms = `PAID ${payload.tier} $${payload.amount_usd}: ${nameFor(payload)} (${payload.email})`;
 
-  void Promise.all([
+  return Promise.all([
     postJson(process.env.MAKE_PURCHASE_WEBHOOK_URL, makePayload, "make-paid"),
     postJson(process.env.GHL_LEGACY_PURCHASE_WEBHOOK_URL, makePayload, "ghl-paid"),
     kitAddTag(

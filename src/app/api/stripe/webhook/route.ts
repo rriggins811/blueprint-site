@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { PRICING } from "@/lib/site";
@@ -168,19 +168,22 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Notify Make.com + GHL legacy. Fire-and-forget.
-  notifyNewPaidCustomer({
-    email,
-    firstName: firstName ?? undefined,
-    lastName,
-    tier,
-    amount_usd:
-      tier === "core" ? PRICING.core.priceUsd : PRICING.premium.priceUsd,
-    stripe_session_id: session.id,
-    stripe_customer_id: stripeCustomerId ?? undefined,
-    user_id: userId,
-    upgraded_from: upgradedFrom,
-  });
+  // Fan out to Make + GHL + Kit + Twilio. Wrapped in after() so Vercel
+  // keeps the function alive through the fetch calls.
+  after(
+    notifyNewPaidCustomer({
+      email,
+      firstName: firstName ?? undefined,
+      lastName,
+      tier,
+      amount_usd:
+        tier === "core" ? PRICING.core.priceUsd : PRICING.premium.priceUsd,
+      stripe_session_id: session.id,
+      stripe_customer_id: stripeCustomerId ?? undefined,
+      user_id: userId,
+      upgraded_from: upgradedFrom,
+    })
+  );
 
   return NextResponse.json({
     received: true,

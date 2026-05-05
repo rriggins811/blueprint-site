@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { freeTierAccess, parseCourseAccess } from "@/lib/access";
@@ -146,16 +146,20 @@ export async function POST(req: NextRequest) {
     console.warn(`[freeguide-signup] magic link send failed: ${otpErr.message}`);
   }
 
-  // Fire Make.com + GHL legacy webhooks (parallel, non-blocking).
-  notifyFreeSignup({
-    email,
-    firstName,
-    lastName,
-    phone,
-    source,
-    signed_up_at: new Date().toISOString(),
-    user_id: userId,
-  });
+  // Fan out to Make + GHL + Kit + Twilio. Wrapped in after() so Vercel
+  // keeps the function alive through the fetch calls instead of killing
+  // the worker as soon as we return the response.
+  after(
+    notifyFreeSignup({
+      email,
+      firstName,
+      lastName,
+      phone,
+      source,
+      signed_up_at: new Date().toISOString(),
+      user_id: userId,
+    })
+  );
 
   return NextResponse.json({
     ok: true,
