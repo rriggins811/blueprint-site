@@ -14,7 +14,7 @@ import { BurnoutAssessment } from "@/components/tools/BurnoutAssessment";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return TOOLS.filter((t) => t.kind === "interactive").map((t) => ({
+  return TOOLS.filter((t) => t.componentKey).map((t) => ({
     toolSlug: t.slug,
   }));
 }
@@ -47,7 +47,7 @@ export default async function ToolPage({
 }) {
   const { toolSlug } = await params;
   const tool = getTool(toolSlug);
-  if (!tool || tool.kind !== "interactive" || !tool.componentKey) notFound();
+  if (!tool || !tool.componentKey) notFound();
 
   const Component = TOOL_COMPONENTS[tool.componentKey];
   if (!Component) notFound();

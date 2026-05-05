@@ -132,32 +132,39 @@ function ModuleTools({ moduleSlug }: { moduleSlug: string }) {
       <h2 className="text-lg font-semibold tracking-tight">Tools for this module</h2>
       <ul className="mt-4 space-y-3">
         {tools.map((t) => (
-          <li key={t.slug}>
-            {t.kind === "interactive" ? (
-              <Link
-                href={`/dashboard/tools/${t.slug}`}
-                className="block rounded-md border border-neutral-200 bg-white p-4 transition hover:border-amber-600"
+          <li
+            key={t.slug}
+            className="rounded-md border border-neutral-200 bg-white p-4"
+          >
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="font-medium text-neutral-900">{t.title}</span>
+              {t.componentKey ? (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  Interactive
+                </span>
+              ) : (
+                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
+                  PDF
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-sm text-neutral-600">{t.description}</p>
+            <div className="mt-3 flex flex-wrap gap-3 text-sm">
+              {t.componentKey ? (
+                <Link
+                  href={`/dashboard/tools/${t.slug}`}
+                  className="inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
+                >
+                  Open the calculator
+                </Link>
+              ) : null}
+              <a
+                href={`/api/pdf/${t.slug}`}
+                className="inline-flex items-center rounded-md border border-neutral-300 px-3 py-1.5 font-medium text-neutral-700 hover:border-neutral-500"
               >
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-medium text-neutral-900">{t.title}</span>
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                    Interactive
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-neutral-600">{t.description}</p>
-              </Link>
-            ) : (
-              <div className="rounded-md border border-neutral-200 bg-white p-4">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-medium text-neutral-900">{t.title}</span>
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-700">
-                    PDF
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-neutral-600">{t.description}</p>
-                <p className="mt-2 text-xs text-neutral-400">PDF download coming soon.</p>
-              </div>
-            )}
+                Download PDF
+              </a>
+            </div>
           </li>
         ))}
       </ul>
