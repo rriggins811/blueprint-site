@@ -25,10 +25,12 @@ async function kitAddTag(
     console.warn(`[kit ${label}] skipped, KIT_API_KEY not set`);
     return;
   }
+  // Kit v4: two-step create-then-tag.
+  //   1. POST /v4/subscribers with {email_address, first_name} → returns subscriber.id (idempotent)
+  //   2. POST /v4/tags/:tag_id/subscribers/:sub_id → tags
+  // Auth header: X-Kit-Api-Key. Authorization: Bearer is reserved for OAuth.
   try {
-    // Kit v4 uses X-Kit-Api-Key for raw API keys.
-    // Authorization: Bearer is reserved for OAuth access tokens.
-    const res = await fetch(`${KIT_BASE}/tags/${tagId}/subscribers`, {
+    const createRes = await fetch(`${KIT_BASE}/subscribers`, {
       method: "POST",
       headers: {
         "X-Kit-Api-Key": key,
@@ -39,9 +41,33 @@ async function kitAddTag(
         first_name: subscriber.firstName,
       }),
     });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.warn(`[kit ${label}] ${res.status} ${res.statusText} ${text.slice(0, 200)}`);
+    if (!createRes.ok) {
+      const text = await createRes.text().catch(() => "");
+      console.warn(
+        `[kit ${label}] create ${createRes.status} ${createRes.statusText} ${text.slice(0, 200)}`
+      );
+      return;
+    }
+    const createBody = (await createRes.json()) as {
+      subscriber?: { id?: number };
+    };
+    const subscriberId = createBody.subscriber?.id;
+    if (!subscriberId) {
+      console.warn(`[kit ${label}] create returned no subscriber id`);
+      return;
+    }
+    const tagRes = await fetch(
+      `${KIT_BASE}/tags/${tagId}/subscribers/${subscriberId}`,
+      {
+        method: "POST",
+        headers: { "X-Kit-Api-Key": key },
+      }
+    );
+    if (!tagRes.ok) {
+      const text = await tagRes.text().catch(() => "");
+      console.warn(
+        `[kit ${label}] tag ${tagRes.status} ${tagRes.statusText} ${text.slice(0, 200)}`
+      );
     }
   } catch (err) {
     console.warn(
