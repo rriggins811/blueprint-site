@@ -29,9 +29,34 @@ const FILE_TO_SLUG = (filename) => {
 };
 
 // Unescape mammoth's over-zealous markdown escaping for plain punctuation.
-// Mammoth escapes ( ) - . ! everywhere "to be safe" but it makes prose ugly.
+// Mammoth escapes punctuation everywhere "to be safe" but it makes prose ugly.
 function unescapePunctuation(md) {
-  return md.replace(/\\([().\-!?'"])/g, "$1");
+  return md.replace(/\\([().\-!?'"+&%$#@:;])/g, "$1");
+}
+
+// Mammoth emits bold as `__text __` with a stray space before the closing
+// underscores when the run ends mid-paragraph. That space breaks tight
+// markdown bold parsing, leaving literal underscores in the output.
+// Convert all `__...__` to `**...**` and strip inner edge whitespace.
+function normalizeBold(md) {
+  return md.replace(/__\s*([^_\n]+?)\s*__/g, "**$1**");
+}
+
+// When a bold paragraph is immediately followed by an italic phrase with no
+// space between (e.g. `**RYAN'S REAL TALK:***My dad...*`) the three stars
+// confuse renderers. Insert a space so the bold closes cleanly before the italic.
+function fixBoldItalicCollision(md) {
+  return md.replace(/\*\*\*(?=[A-Za-z0-9])/g, "** *");
+}
+
+// Source-level corrections Ryan has flagged.
+// "The Other Side of the Deal" is a stale book name in the .docx files.
+// The correct name is "The Other Side of the Conversation".
+function applyContentCorrections(md) {
+  return md.replace(
+    /The Other Side of the Deal/g,
+    "The Other Side of the Conversation"
+  );
 }
 
 function cleanMarkdown(md) {
@@ -57,7 +82,8 @@ function rewriteContent(md) {
     const p = paragraphs[i];
 
     // GHL Lesson marker means we're past dev junk and into real content.
-    if (/^__GHL LESSON\s+\d+/i.test(p)) {
+    // After normalizeBold, the marker is `**GHL LESSON N: Title**`.
+    if (/^\*\*GHL LESSON\s+\d+/i.test(p)) {
       phase = "lessons";
       break;
     }
@@ -73,7 +99,7 @@ function rewriteContent(md) {
 
     // In frontmatter phase, capture title/subtitle from bold paragraphs.
     if (phase === "frontmatter") {
-      const boldOnly = p.match(/^__(.+)__$/);
+      const boldOnly = p.match(/^\*\*(.+)\*\*$/);
       if (boldOnly) {
         const text = boldOnly[1].trim();
         if (!title) {
@@ -97,8 +123,8 @@ function rewriteContent(md) {
   for (; i < paragraphs.length; i++) {
     const p = paragraphs[i];
 
-    // Convert "__GHL LESSON N: Title__" to "## Title".
-    const lessonMatch = p.match(/^__GHL LESSON\s+\d+:\s*(.+?)__$/i);
+    // Convert "**GHL LESSON N: Title**" to "## Title" (post-normalizeBold).
+    const lessonMatch = p.match(/^\*\*GHL LESSON\s+\d+:\s*(.+?)\*\*$/i);
     if (lessonMatch) {
       lessonChunks.push(`## ${lessonMatch[1].trim()}`);
       continue;
@@ -143,7 +169,11 @@ async function main() {
 
     const buffer = await readFile(path.join(SOURCE_DIR, filename));
     const { value: rawMd } = await mammoth.convertToMarkdown({ buffer });
-    const cleaned = unescapePunctuation(cleanMarkdown(rawMd));
+    const cleaned = applyContentCorrections(
+      fixBoldItalicCollision(
+        normalizeBold(unescapePunctuation(cleanMarkdown(rawMd)))
+      )
+    );
     const { title, subtitle, body } = rewriteContent(cleaned);
 
     const out = frontmatter({ slug, title, subtitle }) + body + "\n";
