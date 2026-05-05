@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { sendMagicLink } from "./actions";
+import { signIn } from "./actions";
 
 export const metadata = { title: "Log in" };
 
@@ -21,8 +21,8 @@ export default async function LoginPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">Log in</h1>
       <p className="mt-2 text-sm text-neutral-600">
-        Enter the email you used at checkout. We will send you a one-time link
-        to sign in.
+        Enter the email you used at checkout. Add your password if you have
+        one set, or leave it blank and we will email you a one-time link.
       </p>
 
       {sent ? (
@@ -37,7 +37,7 @@ export default async function LoginPage({
         </div>
       ) : null}
 
-      <form action={sendMagicLink} className="mt-8 flex flex-col gap-4">
+      <form action={signIn} className="mt-8 flex flex-col gap-4">
         <label className="flex flex-col gap-2 text-sm font-medium">
           Email
           <input
@@ -48,11 +48,23 @@ export default async function LoginPage({
             className="rounded-md border border-neutral-300 px-3 py-2 text-base"
           />
         </label>
+        <label className="flex flex-col gap-2 text-sm font-medium">
+          Password{" "}
+          <span className="font-normal text-neutral-500">
+            (optional, leave blank for email link)
+          </span>
+          <input
+            type="password"
+            name="password"
+            autoComplete="current-password"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-base"
+          />
+        </label>
         <button
           type="submit"
           className="rounded-md bg-neutral-900 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-800"
         >
-          Send login link
+          Log in
         </button>
       </form>
     </main>
