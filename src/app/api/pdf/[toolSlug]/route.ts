@@ -24,7 +24,13 @@ export async function GET(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    // Pass the original URL as ?next= so post-login the user lands back here.
+    // Strip origin so we never produce an open-redirect target.
+    const url = new URL(req.url);
+    const next = url.pathname + url.search;
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("next", next);
+    return NextResponse.redirect(loginUrl);
   }
 
   const { data: profile } = await supabase

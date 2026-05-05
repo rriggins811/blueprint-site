@@ -4,18 +4,25 @@ import { signIn } from "./actions";
 
 export const metadata = { title: "Log in" };
 
+// Only allow same-origin internal paths in `?next=` to prevent open redirects.
+function safeNext(raw: string | undefined): string {
+  if (!raw) return "/dashboard";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
+  return raw;
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; next?: string }>;
 }) {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (user) redirect("/dashboard");
-
-  const { sent, error } = await searchParams;
+  const { sent, error, next: rawNext } = await searchParams;
+  const next = safeNext(rawNext);
+  if (user) redirect(next);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
@@ -38,6 +45,7 @@ export default async function LoginPage({
       ) : null}
 
       <form action={signIn} className="mt-8 flex flex-col gap-4">
+        <input type="hidden" name="next" value={next} />
         <label className="flex flex-col gap-2 text-sm font-medium">
           Email
           <input
