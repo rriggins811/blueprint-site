@@ -52,6 +52,35 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, "").replace(/\n\s+/g, "\n").trim();
 }
 
+// Reusable SeniorSafe trial section appended to any Blueprint welcome email.
+// The trial is auto-started for every new Blueprint signup (free or paid) and
+// grants the full Premium+ experience including Maggie for 14 days. Same
+// login as the Blueprint dashboard — Supabase session is shared across the
+// blueprint.r.com and app.seniorsafeapp.com sub-products.
+const SENIORSAFE_TRIAL_SECTION = `
+    <hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0;" />
+    <h2 style="font-size:18px;margin:0 0 8px 0;">Plus: 14 days of SeniorSafe free</h2>
+    <p style="margin:0 0 12px 0;">
+      Your Blueprint signup also activated a 14-day trial of the SeniorSafe
+      family-coordination app at the full Premium+ tier. No card, no extra
+      signup. Same login.
+    </p>
+    <p style="margin:0 0 8px 0;">For the next 14 days you have:</p>
+    <ul>
+      <li>Daily wellness check-ins, medication and appointment tracking, secure document vault.</li>
+      <li>Private family messaging that beats group texts.</li>
+      <li>Maggie, the AI transition specialist trained on the full Blueprint methodology — the same one Premium+ subscribers get.</li>
+    </ul>
+    <p>
+      <a href="https://app.seniorsafeapp.com" style="display:inline-block;background:#1B365D;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Open the app</a>
+    </p>
+    <p style="color:#555;font-size:13px;">
+      Use the same login (Blueprint password or Google sign-in). Trial is
+      automatic — when it ends you can pick a paid SeniorSafe plan or just
+      stop using the app, no charges either way.
+    </p>
+`;
+
 export async function sendCoreWelcomeEmail(args: { to: string; firstName?: string | null }) {
   const greeting = args.firstName ? `Hi ${args.firstName},` : "Welcome,";
   const subject = "Your Blueprint is ready";
@@ -70,6 +99,7 @@ export async function sendCoreWelcomeEmail(args: { to: string; firstName?: strin
       <li>Self-paced. Use what fits your situation, skip what does not.</li>
       <li>If you get stuck, reply to this email. I read every one.</li>
     </ul>
+    ${SENIORSAFE_TRIAL_SECTION}
     <p>Ryan</p>
     <p style="color:#888;font-size:12px;">Riggins Strategic Solutions</p>
   `;
@@ -120,6 +150,7 @@ export async function sendFreeGuideEmail(args: {
     </p>
     <p>If the button does not work, paste this link into your browser:<br><span style="color:#666;font-size:13px;">${activateUrl}</span></p>
     <p>Activation link is good for 7 days.</p>
+    ${SENIORSAFE_TRIAL_SECTION}
     <p>Ryan Riggins<br>Riggins Strategic Solutions<br>(336) 553-8933</p>
   `;
   return send({ to: args.to, subject, html });
