@@ -10,7 +10,7 @@ export const SITE = {
   supportEmail: "support@rigginsstrategicsolutions.com",
   premiumCalBookingUrl:
     process.env.NEXT_PUBLIC_CAL_BOOKING_URL ??
-    "https://cal.com/rriggins/blueprint-strategy",
+    "https://cal.com/ryan-riggins/60min",
   premiumSupportDays: 90,
 } as const;
 
