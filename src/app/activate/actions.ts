@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { after } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { verifyActivationToken } from "@/lib/activation-token";
 import { applyFreeTierSetup } from "@/lib/onboard-free-user";
 
@@ -83,20 +84,50 @@ export async function activate(formData: FormData) {
   }
 
   if (isDuplicate) {
-    // User exists. Try logging them in with the password they just typed —
-    // if they remembered, great. If not, send them to the password reset flow.
+    // User already exists in auth.users. The HMAC token in the URL proves the
+    // email reached this person, which is the same threat model as a password
+    // reset link. Trust it and overwrite the password via the admin client.
+    // This handles the "broken-magic-link backfill" case where the user has
+    // a row but doesn't know their password (auto-set during the old flow).
+    const admin = createAdminSupabaseClient();
+    const list = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const existing = list.data?.users.find(
+      (u) => u.email?.toLowerCase() === email.toLowerCase()
+    );
+    if (!existing) {
+      // Should never happen — signUp said duplicate but listUsers can't find them.
+      // Send to forgot-password as a safe fallback.
+      redirect(
+        `/forgot-password?email=${encodeURIComponent(email)}&from=activate`
+      );
+    }
+    const upd = await admin.auth.admin.updateUserById(existing.id, {
+      password,
+      user_metadata: { first_name: firstName, last_name: lastName },
+    });
+    if (upd.error) {
+      redirect(buildErrorRedirect(token, upd.error.message));
+    }
+
+    // Backfill SeniorSafe trial + ensure free-tier course_access. Idempotent —
+    // won't downgrade a paid Blueprint tier or reset an already-used trial.
+    const setup = await applyFreeTierSetup({
+      userId: existing.id,
+      email,
+      firstName,
+      lastName,
+      source: "blueprint-activation-backfill",
+    });
+    after(setup.fanout);
+
+    // Sign them in with the password we just set.
     const signInRes = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     if (signInRes.error) {
-      redirect(
-        `/forgot-password?email=${encodeURIComponent(email)}&from=activate`
-      );
+      redirect(buildErrorRedirect(token, signInRes.error.message));
     }
-    // Successful sign-in. Skip applyFreeTierSetup — they may already have
-    // course_access; the helper is idempotent and won't downgrade, but we
-    // also don't want to over-write their first_name etc. Just redirect.
     redirect("/dashboard");
   }
 
