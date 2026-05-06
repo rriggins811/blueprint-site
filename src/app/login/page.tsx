@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { signIn, signInWithGoogle } from "./actions";
+import { GoogleSignupAutoStart } from "./GoogleSignupAutoStart";
 
 export const metadata = { title: "Log in" };
 
@@ -14,15 +15,28 @@ function safeNext(raw: string | undefined): string {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    next?: string;
+    signup_via_google?: string;
+    from?: string;
+  }>;
 }) {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { error, next: rawNext } = await searchParams;
+  const { error, next: rawNext, signup_via_google } = await searchParams;
   const next = safeNext(rawNext);
   if (user) redirect(next);
+
+  // Cross-subdomain Google signup bounce (rss-site /freeguide → here). Auto-
+  // start the OAuth flow on this origin so PKCE state stays on blueprint.r.com.
+  // Only honored when the user is not already signed in and we have not just
+  // bounced back from an OAuth error (don't auto-retry if Google was cancelled).
+  if (signup_via_google === "1" && !error) {
+    return <GoogleSignupAutoStart next={next} />;
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
