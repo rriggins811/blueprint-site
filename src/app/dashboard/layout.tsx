@@ -8,6 +8,11 @@ import {
   isPaid,
   type CourseAccess,
 } from "@/lib/access";
+import {
+  seniorsafeStateOf,
+  SENIORSAFE_APP_URL,
+  type SeniorsafeState,
+} from "@/lib/seniorsafe-trial";
 
 export default async function DashboardLayout({
   children,
@@ -25,7 +30,9 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("user_profile")
-    .select("course_access, first_name")
+    .select(
+      "course_access, first_name, subscription_tier, trial_status, trial_start_date"
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -33,6 +40,7 @@ export default async function DashboardLayout({
   const isPremium = access.tier === "premium";
   const isCore = access.tier === "core";
   const isFree = access.tier === "free";
+  const ssState = seniorsafeStateOf(profile);
 
   // No row at all (or unknown tier with empty arrays) = no Blueprint access at all.
   // This is a SeniorSafe-only user who navigated to /dashboard.
@@ -108,6 +116,12 @@ export default async function DashboardLayout({
                 Email Ryan
               </a>
             ) : null}
+            <Link
+              href="/dashboard/settings"
+              className="text-neutral-600 hover:text-neutral-900"
+            >
+              Settings
+            </Link>
             <form action={signOut}>
               <button
                 type="submit"
@@ -122,6 +136,7 @@ export default async function DashboardLayout({
       {isFree ? <FreePlanBanner /> : null}
       {isCore ? <CoreUpgradeBanner /> : null}
       {isPremium ? <PremiumBanner expiresAt={premiumExpiresAt} /> : null}
+      <SeniorSafeBanner state={ssState} blueprintTier={access.tier} />
       <div className="flex-1">{children}</div>
     </div>
   );
@@ -212,6 +227,101 @@ function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {
       </div>
     </aside>
   );
+}
+
+function SeniorSafeBanner({
+  state,
+  blueprintTier,
+}: {
+  state: SeniorsafeState;
+  blueprintTier: "free" | "core" | "premium";
+}) {
+  // Active trial: show countdown and link to the app.
+  if (state.kind === "active") {
+    const days = state.daysRemaining;
+    return (
+      <aside className="border-b border-sky-200 bg-sky-50">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
+          <div className="text-sm">
+            <p className="font-semibold text-sky-900">
+              Your SeniorSafe app trial is active for {days} more day
+              {days === 1 ? "" : "s"}.
+            </p>
+            <p className="mt-0.5 text-xs text-sky-800">
+              Daily check-ins, medication tracking, document vault, and family
+              coordination — included with your Blueprint signup.
+            </p>
+          </div>
+          <a
+            href={SENIORSAFE_APP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-md bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
+          >
+            Open the app
+          </a>
+        </div>
+      </aside>
+    );
+  }
+
+  // Expired trial AND user is still Blueprint free: encourage SeniorSafe resub.
+  // (For Blueprint paid customers we don't push SeniorSafe resub here — the
+  // SeniorSafe app handles that flow inside its own dashboard.)
+  if (state.kind === "expired" && blueprintTier === "free") {
+    return (
+      <aside className="border-b border-neutral-200 bg-neutral-50">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
+          <div className="text-sm">
+            <p className="font-semibold text-neutral-900">
+              Your SeniorSafe trial ended.
+            </p>
+            <p className="mt-0.5 text-xs text-neutral-700">
+              Resubscribe at $14.99/mo for full app access (Premium) or
+              $39.99/mo (Premium+ with Maggie).
+            </p>
+          </div>
+          <a
+            href={SENIORSAFE_APP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:border-neutral-500"
+          >
+            Resubscribe
+          </a>
+        </div>
+      </aside>
+    );
+  }
+
+  // Paid SeniorSafe user (any Blueprint tier): "you're in, go use the app."
+  if (state.kind === "paid" || state.kind === "premium_plus") {
+    return (
+      <aside className="border-b border-emerald-200 bg-emerald-50">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
+          <div className="text-sm">
+            <p className="font-semibold text-emerald-900">
+              You have full SeniorSafe access.
+              {state.kind === "premium_plus"
+                ? " Maggie is included with your Premium+ plan."
+                : ""}
+            </p>
+          </div>
+          <a
+            href={SENIORSAFE_APP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+          >
+            Open the app
+          </a>
+        </div>
+      </aside>
+    );
+  }
+
+  // No trial state to surface (kind === "none" or expired-and-paid).
+  return null;
 }
 
 // Re-export type so other dashboard files can import without pulling parseCourseAccess directly.

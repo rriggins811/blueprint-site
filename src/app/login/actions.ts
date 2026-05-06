@@ -67,3 +67,33 @@ export async function signIn(formData: FormData) {
 
   redirect(`/login?sent=1&next=${encodeURIComponent(next)}`);
 }
+
+// Server action that kicks off Supabase's Google OAuth flow.
+// Reuses the EXISTING SeniorSafe-configured Google provider at the project
+// level — does not create or modify provider settings. Sends the user to
+// Google's consent screen; Google redirects back to /auth/callback, which
+// runs first-time onboarding for new users.
+export async function signInWithGoogle(formData: FormData) {
+  const next = safeNext(formData.get("next") as string | null ?? undefined);
+  const supabase = await createServerSupabaseClient();
+
+  const callback = new URL(`${SITE.url}/auth/callback`);
+  if (next !== "/dashboard") callback.searchParams.set("next", next);
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: callback.toString(),
+      // Force a fresh consent + account select so users can pick the right
+      // Google account on each sign-in.
+      queryParams: { prompt: "select_account" },
+    },
+  });
+
+  if (error || !data?.url) {
+    redirect(
+      `/login?error=${encodeURIComponent(error?.message ?? "Google sign-in unavailable")}`
+    );
+  }
+  redirect(data.url);
+}

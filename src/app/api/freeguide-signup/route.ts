@@ -1,8 +1,7 @@
 import { NextResponse, after, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
-import { freeTierAccess, parseCourseAccess } from "@/lib/access";
-import { notifyFreeSignup } from "@/lib/webhooks";
+import { applyFreeTierSetup } from "@/lib/onboard-free-user";
 import { SITE } from "@/lib/site";
 
 export const runtime = "nodejs";
@@ -18,10 +17,11 @@ const SignupSchema = z.object({
 });
 
 // POST /api/freeguide-signup
-// Idempotent free-tier signup. Find-or-create Supabase auth user, set
-// course_access to the free shape, upsert leads row, send magic link, fire
-// Make.com + GHL webhooks (fire-and-forget). Always returns 200 to the form
-// unless the input is invalid.
+// Idempotent free-tier signup. Creates the Supabase auth user (or returns the
+// existing one), runs applyFreeTierSetup() to set free course_access + start
+// the SeniorSafe trial (gated to never downgrade or reset), inserts a leads
+// row, sends the magic link, and fans out to Kit + Twilio + Make + GHL via
+// after(). Always returns 200 to the form unless input is invalid.
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
@@ -75,66 +75,17 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Upsert user_profile with free-tier course_access. If the row already exists
-  // and has a paid tier, leave it alone so re-submission cannot downgrade.
-  const { data: profile } = await admin
-    .from("user_profile")
-    .select("id, course_access, first_name, last_name, phone")
-    .eq("user_id", userId)
-    .maybeSingle();
+  // Free tier course_access + SeniorSafe trial start (single source of truth).
+  const result = await applyFreeTierSetup({
+    userId,
+    email,
+    firstName,
+    lastName,
+    phone,
+    source,
+  });
 
-  const existingAccess = profile ? parseCourseAccess(profile.course_access) : null;
-  const shouldGrantFree =
-    !existingAccess || existingAccess.tier === "free";
-
-  if (profile) {
-    const updates: Record<string, unknown> = {
-      first_name: profile.first_name ?? firstName,
-      last_name: profile.last_name ?? lastName,
-      phone: profile.phone ?? phone ?? null,
-    };
-    if (shouldGrantFree) {
-      updates.course_access = freeTierAccess();
-    }
-    const { error: updErr } = await admin
-      .from("user_profile")
-      .update(updates)
-      .eq("id", profile.id);
-    if (updErr) {
-      return NextResponse.json({ ok: false, error: updErr.message }, { status: 500 });
-    }
-  } else {
-    const { error: insErr } = await admin.from("user_profile").insert({
-      user_id: userId,
-      first_name: firstName,
-      last_name: lastName,
-      phone: phone ?? null,
-      course_access: freeTierAccess(),
-    });
-    if (insErr) {
-      return NextResponse.json({ ok: false, error: insErr.message }, { status: 500 });
-    }
-  }
-
-  // Upsert leads row for analytics. The leads.form_type check enforces a
-  // closed set ('starter-guide' | 'contact'); 'starter-guide' fits this flow.
-  const { error: leadErr } = await admin
-    .from("leads")
-    .insert({
-      form_type: "starter-guide",
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      phone: phone ?? null,
-      source,
-      raw_payload: { ...parsed.data, user_id: userId },
-    });
-  if (leadErr) {
-    // Non-fatal: leads is for analytics, not gating.
-    console.warn(`[freeguide-signup] lead insert failed: ${leadErr.message}`);
-  }
-
-  // Send the magic link via Supabase auth (Resend takeover comes Day 4).
+  // Send the magic link via Supabase auth (Custom SMTP routes through Resend).
   const { error: otpErr } = await admin.auth.signInWithOtp({
     email,
     options: {
@@ -146,25 +97,15 @@ export async function POST(req: NextRequest) {
     console.warn(`[freeguide-signup] magic link send failed: ${otpErr.message}`);
   }
 
-  // Fan out to Make + GHL + Kit + Twilio. Wrapped in after() so Vercel
-  // keeps the function alive through the fetch calls instead of killing
-  // the worker as soon as we return the response.
-  after(
-    notifyFreeSignup({
-      email,
-      firstName,
-      lastName,
-      phone,
-      source,
-      signed_up_at: new Date().toISOString(),
-      user_id: userId,
-    })
-  );
+  // Wrap fan-out in after() so Vercel keeps the function alive through the
+  // network calls (Make / GHL / Kit / Twilio).
+  after(result.fanout);
 
   return NextResponse.json({
     ok: true,
     user_id: userId,
     tier: "free",
     magic_link_sent: !otpErr,
+    seniorsafe_trial_started: result.trialStarted,
   });
 }

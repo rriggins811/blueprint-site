@@ -14,6 +14,7 @@ import {
   type Tier,
 } from "@/lib/access";
 import { notifyNewPaidCustomer } from "@/lib/webhooks";
+import { startSeniorsafeTrialIfEligible } from "@/lib/onboard-free-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -146,6 +147,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insErr.message }, { status: 500 });
     }
   }
+
+  // Start the SeniorSafe trial if this user hasn't used theirs yet.
+  // Gate inside the helper: only fires when subscription_tier is null/free
+  // AND trial_status is null/none. Won't downgrade a paid SeniorSafe user
+  // and won't reset an expired/converted trial.
+  await startSeniorsafeTrialIfEligible(
+    userId,
+    `blueprint_${tier}_purchase`
+  );
 
   // Send tier-appropriate welcome via Resend (silent skip if no API key).
   const customerName = session.customer_details?.name ?? null;
