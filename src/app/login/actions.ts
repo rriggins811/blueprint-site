@@ -7,17 +7,20 @@ import { SITE } from "@/lib/site";
 
 const FormSchema = z.object({
   email: z.string().email(),
-  password: z.string().optional(),
+  password: z.string().min(8),
   next: z.string().optional(),
 });
 
-// Only allow internal paths to prevent open redirects.
 function safeNext(raw: string | undefined): string {
   if (!raw) return "/dashboard";
   if (!raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
   return raw;
 }
 
+// Password sign-in. The magic-link fallback was removed because Outlook Safe
+// Links pre-fetches one-time-code URLs and burns them. Activation flow now
+// gates the initial password creation; users who forget can hit
+// /forgot-password.
 export async function signIn(formData: FormData) {
   const parsed = FormSchema.safeParse({
     email: formData.get("email"),
@@ -25,56 +28,34 @@ export async function signIn(formData: FormData) {
     next: formData.get("next"),
   });
   if (!parsed.success) {
-    redirect(`/login?error=${encodeURIComponent("Enter a valid email.")}`);
+    redirect(
+      `/login?error=${encodeURIComponent("Enter your email and password.")}`
+    );
   }
 
-  const { email, password } = parsed.data;
   const next = safeNext(parsed.data.next);
   const supabase = await createServerSupabaseClient();
-
-  // Password path. Used when the user has set a password.
-  if (password && password.length > 0) {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      redirect(
-        `/login?error=${encodeURIComponent(error.message)}&next=${encodeURIComponent(next)}`
-      );
-    }
-    redirect(next);
-  }
-
-  // No password: send a magic link. Pass `next` through so post-callback we
-  // route the user to where they came from (a PDF download, a tool, etc.).
-  const callback = new URL(`${SITE.url}/auth/callback`);
-  if (next !== "/dashboard") callback.searchParams.set("next", next);
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: callback.toString(),
-      shouldCreateUser: false,
-    },
+  const { error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
   });
-
   if (error) {
     redirect(
       `/login?error=${encodeURIComponent(error.message)}&next=${encodeURIComponent(next)}`
     );
   }
-
-  redirect(`/login?sent=1&next=${encodeURIComponent(next)}`);
+  redirect(next);
 }
 
-// Server action that kicks off Supabase's Google OAuth flow.
-// Reuses the EXISTING SeniorSafe-configured Google provider at the project
-// level — does not create or modify provider settings. Sends the user to
-// Google's consent screen; Google redirects back to /auth/callback, which
-// runs first-time onboarding for new users.
+// Server action that kicks off Supabase's Google OAuth flow. Reuses the
+// existing SeniorSafe-configured Google provider — does not modify provider
+// config. Sends the user to Google's consent screen; Google redirects back
+// to /auth/callback, which runs first-time onboarding (free tier course_access
+// + SeniorSafe trial) for new users.
 export async function signInWithGoogle(formData: FormData) {
-  const next = safeNext(formData.get("next") as string | null ?? undefined);
+  const next = safeNext(
+    (formData.get("next") as string | null) ?? undefined
+  );
   const supabase = await createServerSupabaseClient();
 
   const callback = new URL(`${SITE.url}/auth/callback`);
@@ -84,8 +65,6 @@ export async function signInWithGoogle(formData: FormData) {
     provider: "google",
     options: {
       redirectTo: callback.toString(),
-      // Force a fresh consent + account select so users can pick the right
-      // Google account on each sign-in.
       queryParams: { prompt: "select_account" },
     },
   });

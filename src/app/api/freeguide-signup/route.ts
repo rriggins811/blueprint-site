@@ -1,8 +1,9 @@
 import { NextResponse, after, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
-import { applyFreeTierSetup } from "@/lib/onboard-free-user";
-import { SITE } from "@/lib/site";
+import { mintActivationToken } from "@/lib/activation-token";
+import { sendFreeGuideEmail } from "@/lib/email/resend";
+import { notifyFreeSignup } from "@/lib/webhooks";
 
 export const runtime = "nodejs";
 
@@ -17,11 +18,26 @@ const SignupSchema = z.object({
 });
 
 // POST /api/freeguide-signup
-// Idempotent free-tier signup. Creates the Supabase auth user (or returns the
-// existing one), runs applyFreeTierSetup() to set free course_access + start
-// the SeniorSafe trial (gated to never downgrade or reset), inserts a leads
-// row, sends the magic link, and fans out to Kit + Twilio + Make + GHL via
-// after(). Always returns 200 to the form unless input is invalid.
+//
+// New flow (replaces the magic-link approach because Outlook Safe Links
+// pre-fetches magic-link URLs and consumes the one-time code, breaking auth
+// for Outlook / Hotmail recipients):
+//
+//   1. Validate input.
+//   2. Mint a signed activation token (HMAC-SHA256, 7-day expiry, payload
+//      contains email + name).
+//   3. Send the freeguide email via Resend with the PDF link and an
+//      "Activate my free account" CTA pointing at /activate?token=...
+//   4. Insert a leads row in Supabase (analytics, parallel-write redundancy).
+//   5. Fire fan-out (Make + GHL legacy + Kit free-tier tag + Twilio SMS).
+//   6. Return 200.
+//
+// We do NOT create the Supabase auth user here. The user is created on
+// /activate when they set a password. This means until they activate they
+// have no auth account, no course_access, and no SeniorSafe trial.
+// applyFreeTierSetup runs on the /activate POST instead.
+//
+// Always returns 200 to the form unless input is invalid.
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
@@ -47,65 +63,54 @@ export async function POST(req: NextRequest) {
   const { email, firstName, lastName, phone, source } = parsed.data;
   const admin = createAdminSupabaseClient();
 
-  // Find or create auth user.
-  let userId: string | null = null;
-  {
-    const list = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    if (list.error) {
-      return NextResponse.json({ ok: false, error: list.error.message }, { status: 500 });
-    }
-    const existing = list.data.users.find(
-      (u) => u.email?.toLowerCase() === email
-    );
-    if (existing) {
-      userId = existing.id;
-    } else {
-      const created = await admin.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: { first_name: firstName, last_name: lastName, phone },
-      });
-      if (created.error || !created.data.user) {
-        return NextResponse.json(
-          { ok: false, error: created.error?.message ?? "create_user_failed" },
-          { status: 500 }
-        );
-      }
-      userId = created.data.user.id;
-    }
-  }
+  // Mint the activation token. Self-contained — does not touch Supabase auth.
+  const activationToken = mintActivationToken({ email, firstName, lastName });
 
-  // Free tier course_access + SeniorSafe trial start (single source of truth).
-  const result = await applyFreeTierSetup({
-    userId,
-    email,
+  // Send the activation email. Failure here is logged but not fatal — the
+  // user will see "check your email" on the rss-site /freeguide form anyway,
+  // and Make.com / Twilio will still notify Ryan.
+  const emailResult = await sendFreeGuideEmail({
+    to: email,
     firstName,
-    lastName,
-    phone,
-    source,
+    activationToken,
   });
-
-  // Send the magic link via Supabase auth (Custom SMTP routes through Resend).
-  const { error: otpErr } = await admin.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${SITE.url}/auth/callback`,
-      shouldCreateUser: false,
-    },
-  });
-  if (otpErr) {
-    console.warn(`[freeguide-signup] magic link send failed: ${otpErr.message}`);
+  if (!emailResult.ok) {
+    console.warn(`[freeguide-signup] activation email failed: ${emailResult.reason}`);
   }
 
-  // Wrap fan-out in after() so Vercel keeps the function alive through the
-  // network calls (Make / GHL / Kit / Twilio).
-  after(result.fanout);
+  // Leads row for analytics. Parallel-write window — duplicates ok.
+  const { error: leadErr } = await admin.from("leads").insert({
+    form_type: "starter-guide",
+    email,
+    first_name: firstName,
+    last_name: lastName,
+    phone: phone ?? null,
+    source,
+    raw_payload: { email, firstName, lastName, phone, source, channel: "blueprint-activation" },
+  });
+  if (leadErr) {
+    console.warn(`[freeguide-signup] lead insert failed: ${leadErr.message}`);
+  }
+
+  // Fan out. user_id is undefined at this stage because the user has not
+  // activated yet. Downstream consumers should treat the absence as "pending
+  // activation". The Twilio SMS still names the person + email so Ryan can
+  // act if needed.
+  after(
+    notifyFreeSignup({
+      email,
+      firstName,
+      lastName,
+      phone,
+      source,
+      signed_up_at: new Date().toISOString(),
+      user_id: "pending-activation",
+    })
+  );
 
   return NextResponse.json({
     ok: true,
-    user_id: userId,
-    tier: "free",
-    magic_link_sent: !otpErr,
-    seniorsafe_trial_started: result.trialStarted,
+    activation_email_sent: emailResult.ok,
+    activation_email_id: emailResult.ok ? emailResult.id : null,
   });
 }

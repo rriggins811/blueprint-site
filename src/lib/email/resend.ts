@@ -76,6 +76,55 @@ export async function sendCoreWelcomeEmail(args: { to: string; firstName?: strin
   return send({ to: args.to, subject, html });
 }
 
+// Free guide email — sent immediately on /freeguide form submit. Replaces the
+// magic-link primary auth flow because Outlook Safe Links pre-fetches magic
+// link URLs and consumes the one-time code, breaking auth for Outlook /
+// Hotmail recipients (large chunk of the audience). The activation link goes
+// to /activate (a form, not an auth endpoint), so Safe Links pre-fetch is
+// harmless.
+export async function sendFreeGuideEmail(args: {
+  to: string;
+  firstName?: string | null;
+  activationToken: string;
+  pdfUrl?: string;
+}): Promise<SendResult> {
+  const greeting = args.firstName ? `Hi ${args.firstName},` : "Hi,";
+  const subject = args.firstName
+    ? `Your Simple Blueprint is here, ${args.firstName}`
+    : "Your Simple Blueprint is here";
+  const activateUrl =
+    `${SITE.url}/activate?token=${encodeURIComponent(args.activationToken)}` +
+    `&email=${encodeURIComponent(args.to)}`;
+  const pdfUrl = args.pdfUrl ?? process.env.FREEGUIDE_PDF_URL ?? "";
+  const html = `
+    <p>${greeting}</p>
+    <p>The Simple Blueprint is the short, plain-English starter guide for families thinking about a senior housing transition. ${
+      pdfUrl
+        ? `<a href="${pdfUrl}">Click here to download the PDF</a>.`
+        : "Your copy of the PDF is on the way."
+    }</p>
+    <p>
+      Want more than a PDF? Activate your free Blueprint account and you will get:
+    </p>
+    <ul>
+      <li>The online interactive version of Module 00 with the 7-day quick start checklist.</li>
+      <li>Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker.</li>
+      <li>A 14-day trial of the SeniorSafe app on iPhone, Android, and the web. Same login.</li>
+    </ul>
+    <p>
+      <a href="${activateUrl}" style="display:inline-block;background:#b45309;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Activate my free account</a>
+    </p>
+    <p style="color:#555;">
+      You will set a password on the next screen. The same password also works
+      in the SeniorSafe app on your phone, so you only need to remember one.
+    </p>
+    <p>If the button does not work, paste this link into your browser:<br><span style="color:#666;font-size:13px;">${activateUrl}</span></p>
+    <p>Activation link is good for 7 days.</p>
+    <p>Ryan Riggins<br>Riggins Strategic Solutions<br>(336) 553-8933</p>
+  `;
+  return send({ to: args.to, subject, html });
+}
+
 export async function sendPremiumWelcomeEmail(args: {
   to: string;
   firstName?: string | null;

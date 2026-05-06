@@ -1,10 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { signIn, signInWithGoogle } from "./actions";
 
 export const metadata = { title: "Log in" };
 
-// Only allow same-origin internal paths in `?next=` to prevent open redirects.
 function safeNext(raw: string | undefined): string {
   if (!raw) return "/dashboard";
   if (!raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
@@ -14,13 +14,13 @@ function safeNext(raw: string | undefined): string {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { sent, error, next: rawNext } = await searchParams;
+  const { error, next: rawNext } = await searchParams;
   const next = safeNext(rawNext);
   if (user) redirect(next);
 
@@ -28,15 +28,8 @@ export default async function LoginPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">Log in</h1>
       <p className="mt-2 text-sm text-neutral-600">
-        Enter the email you used at checkout. Add your password if you have
-        one set, or leave it blank and we will email you a one-time link.
+        Use the email and password you set when you activated your account.
       </p>
-
-      {sent ? (
-        <div className="mt-6 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-          Check your email. The link signs you in for the next 60 minutes.
-        </div>
-      ) : null}
 
       {error ? (
         <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900">
@@ -74,13 +67,12 @@ export default async function LoginPage({
           />
         </label>
         <label className="flex flex-col gap-2 text-sm font-medium">
-          Password{" "}
-          <span className="font-normal text-neutral-500">
-            (optional, leave blank for email link)
-          </span>
+          Password
           <input
             type="password"
             name="password"
+            required
+            minLength={8}
             autoComplete="current-password"
             className="rounded-md border border-neutral-300 px-3 py-2 text-base"
           />
@@ -92,6 +84,26 @@ export default async function LoginPage({
           Log in
         </button>
       </form>
+
+      <p className="mt-4 text-center text-sm">
+        <Link
+          href="/forgot-password"
+          className="text-neutral-600 underline hover:text-neutral-900"
+        >
+          Forgot password?
+        </Link>
+      </p>
+
+      <p className="mt-2 text-center text-xs text-neutral-500">
+        New here?{" "}
+        <a
+          href="https://rigginsstrategicsolutions.com/freeguide"
+          className="font-medium text-neutral-900 underline"
+        >
+          Get the free Simple Blueprint
+        </a>{" "}
+        and we will email you an activation link.
+      </p>
     </main>
   );
 }
