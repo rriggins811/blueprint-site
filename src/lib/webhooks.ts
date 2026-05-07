@@ -12,6 +12,13 @@ type Json = Record<string, unknown>;
 const KIT_TAG_FREE_TIER = 19396667;
 const KIT_TAG_CORE_CUSTOMER = 19396672;
 const KIT_TAG_PREMIUM_CUSTOMER = 19396675;
+// Make-bypass tags (added 2026-05-07 after Make broken-webhook-resource diagnosis).
+// These previously routed via Make.com scenarios (4994110/4994124/4994125)
+// which exhibited a 40s ModuleTimeoutError at gateway:CustomWebHook on every
+// execution despite the gateway returning 200 to the caller. Recreating the
+// hooks didn't fix it. Bypass Make entirely — apply tags directly.
+const KIT_TAG_FREEGUIDE_TRIAL = 19444443;
+const KIT_TAG_SENIORSAFE_CHURNED = 19444482;
 
 const KIT_BASE = "https://api.kit.com/v4";
 
@@ -174,19 +181,21 @@ export function notifyFreeSignup(payload: {
   const sms = `New free Blueprint signup: ${nameFor(payload)} (${payload.email})`;
 
   return Promise.all([
-    // Legacy Make.com webhook — known broken (queue stuck per 2026-05-07
-    // diagnosis). Kept during cutover so we can drop the env var pointer in
-    // a separate commit once the new Kit-routed scenario is verified.
-    postJson(process.env.MAKE_FREESIGNUP_WEBHOOK_URL, makePayload, "make-free"),
-    // New Make.com webhook → "RSS Kit · Freeguide Trial Entry" scenario.
-    // Applies the freeguide-trial Kit tag (drives the 6-email nurture) and
-    // SMSes Ryan. Runs ALONGSIDE the direct kitAddTag below during cutover.
-    postJson(process.env.MAKE_KIT_FREEGUIDE_WEBHOOK_URL, makePayload, "make-kit-free"),
+    // Legacy GHL webhook — leave as-is, working per Ryan's confirmation.
     postJson(process.env.GHL_LEGACY_FREESIGNUP_WEBHOOK_URL, makePayload, "ghl-free"),
+    // Direct Kit tagging — applies BOTH the blueprint-free-tier (existing
+    // behavior, drives Blueprint course nurture) AND freeguide-trial
+    // (replaces broken Make Scenario 1 — drives the 6-email Free Guide
+    // Trial Nurture sequence in Kit).
     kitAddTag(
       { email: payload.email, firstName: payload.firstName },
       KIT_TAG_FREE_TIER,
       "free-signup"
+    ),
+    kitAddTag(
+      { email: payload.email, firstName: payload.firstName },
+      KIT_TAG_FREEGUIDE_TRIAL,
+      "freeguide-trial"
     ),
     twilioSendSms(sms, "free-signup"),
   ]);
@@ -211,17 +220,15 @@ export function notifyNewPaidCustomer(payload: {
   const sms = `PAID ${payload.tier} $${payload.amount_usd}: ${nameFor(payload)} (${payload.email})`;
 
   return Promise.all([
-    // Legacy Make.com webhook — known broken. Kept during cutover.
-    postJson(process.env.MAKE_PURCHASE_WEBHOOK_URL, makePayload, "make-paid"),
-    // New Make.com webhook → "RSS Kit · Stripe Premium/Premium+ Tag" scenario.
-    // Tier router applies seniorsafe-premium / seniorsafe-premium-plus tag.
-    // Note: blueprint-site sends tier='core'|'premium' (course tiers). The
-    // new scenario's filter accepts tier='paid'|'premium' for the Premium
-    // branch — overlap on 'premium' value means a Blueprint Premium ($297)
-    // course buyer ALSO gets seniorsafe-premium tag. Worth confirming this
-    // is the intended cross-product behavior before going live.
-    postJson(process.env.MAKE_KIT_PREMIUM_WEBHOOK_URL, makePayload, "make-kit-premium"),
+    // Legacy GHL webhook — leave as-is, working per Ryan's confirmation.
     postJson(process.env.GHL_LEGACY_PURCHASE_WEBHOOK_URL, makePayload, "ghl-paid"),
+    // Direct Kit tagging — applies the blueprint-core-customer or
+    // blueprint-premium-customer tag (drives Blueprint course nurture).
+    // Note: SeniorSafe-Premium tagging is owned by the senior-safe Stripe
+    // webhook (which fires on actual SeniorSafe subscription events), NOT
+    // by blueprint-site (whose 'premium' tier means Blueprint Premium course,
+    // a one-time purchase). The previous Make Scenario 2 conflation is
+    // dropped along with the broken webhook.
     kitAddTag(
       { email: payload.email, firstName: payload.firstName },
       tagId,
@@ -231,11 +238,12 @@ export function notifyNewPaidCustomer(payload: {
   ]);
 }
 
-// Subscription cancellation → fans out to the Kit churn Make scenario only.
-// No direct Kit tag here (the Make scenario applies seniorsafe-churned), no
-// direct Twilio (Ryan didn't ask for SMS on churn — easy to add if wanted).
-// Today this fires only for SeniorSafe subscription cancellations; Blueprint
-// Core/Premium are one-time purchases with no subscription lifecycle.
+// Subscription cancellation → applies seniorsafe-churned tag directly.
+// Today this fires only for SeniorSafe subscription cancellations (Blueprint
+// Core/Premium are one-time purchases). Senior-safe stripe-webhook ALSO
+// applies this tag from its own customer.subscription.deleted handler —
+// double-tagging is safe (Kit tag-on-subscriber is idempotent), and keeping
+// both ensures coverage if either Stripe webhook endpoint is ever paused.
 export function notifyChurn(payload: {
   email: string;
   firstName?: string;
@@ -245,8 +253,11 @@ export function notifyChurn(payload: {
   stripe_customer_id?: string;
   canceled_at?: string;
 }): Promise<unknown[]> {
-  const makePayload = { ...payload, kind: "subscription_canceled" };
   return Promise.all([
-    postJson(process.env.MAKE_KIT_CHURN_WEBHOOK_URL, makePayload, "make-kit-churn"),
+    kitAddTag(
+      { email: payload.email, firstName: payload.firstName },
+      KIT_TAG_SENIORSAFE_CHURNED,
+      "seniorsafe-churned"
+    ),
   ]);
 }
