@@ -13,7 +13,7 @@ import {
   premiumTierAccess,
   type Tier,
 } from "@/lib/access";
-import { notifyNewPaidCustomer } from "@/lib/webhooks";
+import { notifyNewPaidCustomer, notifyChurn } from "@/lib/webhooks";
 import { startSeniorsafeTrialIfEligible } from "@/lib/onboard-free-user";
 
 export const runtime = "nodejs";
@@ -43,6 +43,59 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Invalid signature";
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+
+  // Subscription cancellation — fan out to the Kit churn Make scenario.
+  // This event fires for the SeniorSafe subscriptions ($14.99/mo,
+  // $39.99/mo) hosted on the same Stripe account. Blueprint Core/Premium
+  // are one-time purchases so they never produce this event. The Stripe
+  // event's customer object carries only the customer ID; resolve the
+  // email via stripe.customers.retrieve.
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+    const customerId =
+      typeof subscription.customer === "string"
+        ? subscription.customer
+        : subscription.customer?.id ?? null;
+    let email: string | null = null;
+    let firstName: string | undefined;
+    let lastName: string | undefined;
+    if (customerId) {
+      try {
+        const customer = await stripe.customers.retrieve(customerId);
+        if (!customer.deleted) {
+          email = customer.email;
+          const name = customer.name ?? undefined;
+          if (name) {
+            const parts = name.split(" ");
+            firstName = parts[0];
+            lastName = parts.length > 1 ? parts.slice(1).join(" ") : undefined;
+          }
+        }
+      } catch (err) {
+        console.warn(
+          `[stripe webhook] customer.retrieve failed for ${customerId}: ${
+            err instanceof Error ? err.message : "unknown"
+          }`
+        );
+      }
+    }
+    if (email) {
+      after(
+        notifyChurn({
+          email,
+          firstName,
+          lastName,
+          prior_tier: subscription.metadata?.tier,
+          stripe_subscription_id: subscription.id,
+          stripe_customer_id: customerId ?? undefined,
+          canceled_at: subscription.canceled_at
+            ? new Date(subscription.canceled_at * 1000).toISOString()
+            : undefined,
+        })
+      );
+    }
+    return NextResponse.json({ received: true, churn_fanout: !!email });
   }
 
   if (event.type !== "checkout.session.completed") {

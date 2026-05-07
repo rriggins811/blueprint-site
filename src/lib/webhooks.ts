@@ -174,7 +174,14 @@ export function notifyFreeSignup(payload: {
   const sms = `New free Blueprint signup: ${nameFor(payload)} (${payload.email})`;
 
   return Promise.all([
+    // Legacy Make.com webhook — known broken (queue stuck per 2026-05-07
+    // diagnosis). Kept during cutover so we can drop the env var pointer in
+    // a separate commit once the new Kit-routed scenario is verified.
     postJson(process.env.MAKE_FREESIGNUP_WEBHOOK_URL, makePayload, "make-free"),
+    // New Make.com webhook → "RSS Kit · Freeguide Trial Entry" scenario.
+    // Applies the freeguide-trial Kit tag (drives the 6-email nurture) and
+    // SMSes Ryan. Runs ALONGSIDE the direct kitAddTag below during cutover.
+    postJson(process.env.MAKE_KIT_FREEGUIDE_WEBHOOK_URL, makePayload, "make-kit-free"),
     postJson(process.env.GHL_LEGACY_FREESIGNUP_WEBHOOK_URL, makePayload, "ghl-free"),
     kitAddTag(
       { email: payload.email, firstName: payload.firstName },
@@ -204,7 +211,16 @@ export function notifyNewPaidCustomer(payload: {
   const sms = `PAID ${payload.tier} $${payload.amount_usd}: ${nameFor(payload)} (${payload.email})`;
 
   return Promise.all([
+    // Legacy Make.com webhook — known broken. Kept during cutover.
     postJson(process.env.MAKE_PURCHASE_WEBHOOK_URL, makePayload, "make-paid"),
+    // New Make.com webhook → "RSS Kit · Stripe Premium/Premium+ Tag" scenario.
+    // Tier router applies seniorsafe-premium / seniorsafe-premium-plus tag.
+    // Note: blueprint-site sends tier='core'|'premium' (course tiers). The
+    // new scenario's filter accepts tier='paid'|'premium' for the Premium
+    // branch — overlap on 'premium' value means a Blueprint Premium ($297)
+    // course buyer ALSO gets seniorsafe-premium tag. Worth confirming this
+    // is the intended cross-product behavior before going live.
+    postJson(process.env.MAKE_KIT_PREMIUM_WEBHOOK_URL, makePayload, "make-kit-premium"),
     postJson(process.env.GHL_LEGACY_PURCHASE_WEBHOOK_URL, makePayload, "ghl-paid"),
     kitAddTag(
       { email: payload.email, firstName: payload.firstName },
@@ -212,5 +228,25 @@ export function notifyNewPaidCustomer(payload: {
       `new-paid-${payload.tier}`
     ),
     twilioSendSms(sms, `new-paid-${payload.tier}`),
+  ]);
+}
+
+// Subscription cancellation → fans out to the Kit churn Make scenario only.
+// No direct Kit tag here (the Make scenario applies seniorsafe-churned), no
+// direct Twilio (Ryan didn't ask for SMS on churn — easy to add if wanted).
+// Today this fires only for SeniorSafe subscription cancellations; Blueprint
+// Core/Premium are one-time purchases with no subscription lifecycle.
+export function notifyChurn(payload: {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  prior_tier?: string;
+  stripe_subscription_id?: string;
+  stripe_customer_id?: string;
+  canceled_at?: string;
+}): Promise<unknown[]> {
+  const makePayload = { ...payload, kind: "subscription_canceled" };
+  return Promise.all([
+    postJson(process.env.MAKE_KIT_CHURN_WEBHOOK_URL, makePayload, "make-kit-churn"),
   ]);
 }
