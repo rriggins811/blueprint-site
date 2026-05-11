@@ -15,6 +15,7 @@ import {
 } from "@/lib/access";
 import { notifyNewPaidCustomer, notifyChurn } from "@/lib/webhooks";
 import { startSeniorsafeTrialIfEligible } from "@/lib/onboard-free-user";
+import { fireServerPurchase } from "@/lib/meta/server-fires";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -255,6 +256,24 @@ export async function POST(req: NextRequest) {
       stripe_customer_id: stripeCustomerId ?? undefined,
       user_id: userId,
       upgraded_from: upgradedFrom,
+    })
+  );
+
+  // Meta Purchase CAPI fire. Standard 'Purchase' event (NEVER OrderFormPurchase,
+  // which is blocked Meta-side). content_name differentiates Core vs Premium.
+  // Uses actual amount_total (so a Core→Premium upgrade with $50 coupon
+  // reports value=247, not 297), falling back to list price if Stripe didn't
+  // populate amount_total.
+  after(
+    fireServerPurchase({
+      userId,
+      email,
+      firstName: firstName ?? undefined,
+      lastName,
+      source: `blueprint_${tier}_purchase`,
+      valueUsd: paidUsd,
+      contentName: tier === "core" ? "blueprint_core" : "blueprint_premium",
+      stripeSessionId: session.id,
     })
   );
 

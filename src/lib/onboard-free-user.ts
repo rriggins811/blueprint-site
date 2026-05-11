@@ -13,6 +13,7 @@ import { createAdminSupabaseClient } from "./supabase-admin";
 import { freeTierAccess, parseCourseAccess } from "./access";
 import { isEligibleForTrialStart } from "./seniorsafe-trial";
 import { notifyFreeSignup } from "./webhooks";
+import { fireServerStartTrial } from "./meta/server-fires";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -26,7 +27,10 @@ export type OnboardArgs = {
 };
 
 export type OnboardResult = {
-  fanout: Promise<unknown[]>;
+  // Combined fan-out: notifyFreeSignup (always) plus the optional Meta
+  // StartTrial CAPI fire (only when trial was actually granted). Caller
+  // wraps in after() to keep the worker alive through external fetches.
+  fanout: Promise<unknown>;
   freeTierGranted: boolean;
   trialStarted: boolean;
 };
@@ -230,7 +234,29 @@ export async function applyFreeTierSetup(
     user_id: args.userId,
   });
 
-  return { fanout, freeTierGranted: grantFree, trialStarted: startTrial };
+  // Fire StartTrial server-side CAPI on actual trial-grant. No pixel
+  // counterpart — this code path runs after the user has redirected away
+  // from any browser interaction (e.g. /activate redirect to /dashboard).
+  // Caller wraps the returned promise in after() if it cares about completion.
+  let trialFanout: Promise<unknown> | undefined;
+  if (startTrial) {
+    trialFanout = fireServerStartTrial({
+      userId: args.userId,
+      email: args.email,
+      firstName: args.firstName,
+      lastName: args.lastName,
+      source: args.source,
+    });
+  }
+  const combinedFanout = trialFanout
+    ? Promise.all([fanout, trialFanout])
+    : fanout;
+
+  return {
+    fanout: combinedFanout,
+    freeTierGranted: grantFree,
+    trialStarted: startTrial,
+  };
 }
 
 // Stripe webhook helper. Starts a SeniorSafe trial alongside paid Blueprint
@@ -262,5 +288,31 @@ export async function startSeniorsafeTrialIfEligible(
     console.warn(`[trial-start userId=${userId}] failed: ${error.message}`);
     return { trialStarted: false };
   }
+
+  // Best-effort Meta StartTrial CAPI fire. We only have userId here; look
+  // up the auth.users email + name to maximize match quality. Never blocks.
+  try {
+    const { data: authUser } = await admin.auth.admin.getUserById(userId);
+    const email = authUser?.user?.email ?? undefined;
+    const firstName =
+      (authUser?.user?.user_metadata?.first_name as string | undefined) ??
+      undefined;
+    const lastName =
+      (authUser?.user?.user_metadata?.last_name as string | undefined) ??
+      undefined;
+    // Fire and forget — caller doesn't await this.
+    void fireServerStartTrial({
+      userId,
+      email,
+      firstName,
+      lastName,
+      source,
+    });
+  } catch (err) {
+    console.warn(
+      `[trial-start userId=${userId}] meta capi setup failed: ${err instanceof Error ? err.message : "unknown"}`,
+    );
+  }
+
   return { trialStarted: true };
 }

@@ -7,6 +7,7 @@ import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { verifyActivationToken } from "@/lib/activation-token";
 import { applyFreeTierSetup } from "@/lib/onboard-free-user";
+import { fireServerLead } from "@/lib/meta/server-fires";
 
 const FormSchema = z
   .object({
@@ -120,6 +121,19 @@ export async function activate(formData: FormData) {
     });
     after(setup.fanout);
 
+    // Meta Lead CAPI fire — server-side, no pixel counterpart since the
+    // user redirects away from /activate immediately.
+    after(
+      fireServerLead({
+        userId: existing.id,
+        email,
+        firstName,
+        lastName,
+        source: "blueprint-activation-backfill",
+        customData: { content_name: "blueprint_free_activation" },
+      }),
+    );
+
     // Sign them in with the password we just set.
     const signInRes = await supabase.auth.signInWithPassword({
       email,
@@ -148,6 +162,18 @@ export async function activate(formData: FormData) {
     source: "blueprint-activation",
   });
   after(result.fanout);
+
+  // Meta Lead CAPI fire — server-side, fires alongside the existing fan-out.
+  after(
+    fireServerLead({
+      userId,
+      email,
+      firstName,
+      lastName,
+      source: "blueprint-activation",
+      customData: { content_name: "blueprint_free_activation" },
+    }),
+  );
 
   redirect("/dashboard");
 }

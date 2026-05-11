@@ -5,6 +5,7 @@ import { MODULES } from "@/lib/blueprint-modules";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { parseCourseAccess, isToolUnlocked } from "@/lib/access";
 import { QuickStart7Day } from "@/components/tools/QuickStart7Day";
+import { TrackToolUsed } from "@/components/TrackToolUsed";
 import { StartingPointAssessment } from "@/components/tools/StartingPointAssessment";
 import { TransitionCostEstimator } from "@/components/tools/TransitionCostEstimator";
 import { MonthlyCostComparison } from "@/components/tools/MonthlyCostComparison";
@@ -100,6 +101,11 @@ export default async function ToolPage({
       <section className="mt-8">
         <Component />
       </section>
+
+      {/* Meta Pixel + CAPI Tool_Used fire — client-side. Mounts after the
+          server-side tier gate above, so fires only for users who unlocked
+          this tool. Custom event name 'Tool_Used' (neutral, not flagged). */}
+      <TrackToolUsed toolSlug={tool.slug} />
     </main>
   );
 }
