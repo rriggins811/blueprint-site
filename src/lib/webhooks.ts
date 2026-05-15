@@ -1,7 +1,11 @@
 // Outbound notifications: Make.com (legacy redundant), Kit (subscriber tagging
-// and nurture sequences), Twilio (SMS to Ryan), and GHL (legacy parallel write).
+// and nurture sequences), Twilio (SMS to Ryan), GHL legacy webhook URL (parallel
+// write), and GHL ghl-proxy direct API (the May-15 ghl-proxy migration —
+// see memory/sop_ghl_operations.md).
 // All fire-and-forget by design — signup or purchase latency must never be
 // blocked on a third-party API.
+
+import { upsertGhlContactWithTags, GHL_TAGS } from "@/lib/ghl-proxy";
 
 type Json = Record<string, unknown>;
 
@@ -128,6 +132,49 @@ async function twilioSendSms(body: string, label: string): Promise<void> {
   }
 }
 
+// ---- ghl-proxy direct-API tag wrapper ----
+// Adapter around upsertGhlContactWithTags that returns void + logs (matching
+// the fire-and-forget signature of kitAddTag / postJson / twilioSendSms so
+// the orchestrators below can fan out uniformly via Promise.all).
+async function ghlProxyUpsertAndTag(
+  subscriber: {
+    email: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    phone?: string | null;
+  },
+  tag: string,
+  source: string,
+  label: string
+): Promise<void> {
+  try {
+    const res = await upsertGhlContactWithTags(
+      {
+        email: subscriber.email,
+        firstName: subscriber.firstName,
+        lastName: subscriber.lastName,
+        phone: subscriber.phone,
+        source,
+      },
+      [tag]
+    );
+    if (!res.ok) {
+      console.warn(
+        `[ghl-proxy ${label}] failed status=${res.status} error=${res.error}`
+      );
+      return;
+    }
+    // Phase 3 verification logging — drop after Phase 5 sign-off.
+    console.info(
+      `[ghl-proxy ${label}] ok contactId=${res.contactId} tag=${tag}`
+    );
+  } catch (err) {
+    console.warn(
+      `[ghl-proxy ${label}] threw: ${err instanceof Error ? err.message : "unknown"}`
+    );
+  }
+}
+
 // ---- Generic webhook POST (used by Make.com + GHL legacy) ----
 async function postJson(
   url: string | undefined,
@@ -219,9 +266,32 @@ export function notifyNewPaidCustomer(payload: {
       : KIT_TAG_CORE_CUSTOMER;
   const sms = `PAID ${payload.tier} $${payload.amount_usd}: ${nameFor(payload)} (${payload.email})`;
 
+  // ghl-proxy direct-API tag (Block C Phase 3, May-15). Per the locked
+  // tag taxonomy in memory/sop_ghl_operations.md, paid Blueprint purchases
+  // tag with product-blueprint-core or product-blueprint-premium. These
+  // fire alongside (NOT replace) the legacy GHL webhook + Kit calls — once
+  // Phase 5 verifies the proxy path lands tags correctly we can drop the
+  // legacy GHL webhook URL fan-out.
+  const ghlTag =
+    payload.tier === "premium"
+      ? GHL_TAGS.PRODUCT_BLUEPRINT_PREMIUM
+      : GHL_TAGS.PRODUCT_BLUEPRINT_CORE;
+
   return Promise.all([
-    // Legacy GHL webhook — leave as-is, working per Ryan's confirmation.
+    // Legacy GHL webhook — leave as-is during Phase 3 verification window.
+    // Drop after Phase 5 confirms ghl-proxy parity.
     postJson(process.env.GHL_LEGACY_PURCHASE_WEBHOOK_URL, makePayload, "ghl-paid"),
+    // GHL direct-API via ghl-proxy Edge Function — the future-state path.
+    ghlProxyUpsertAndTag(
+      {
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+      },
+      ghlTag,
+      `blueprint_${payload.tier}_purchase`,
+      `paid-${payload.tier}`
+    ),
     // Direct Kit tagging — applies the blueprint-core-customer or
     // blueprint-premium-customer tag (drives Blueprint course nurture).
     // Note: SeniorSafe-Premium tagging is owned by the senior-safe Stripe
