@@ -47,6 +47,38 @@ export default async function DashboardHome() {
         </p>
       </header>
 
+      {/* Simple Blueprint PDF — moved out of the welcome email per the
+          May 15 funnel-fix decision. Recipients were clicking the email
+          PDF link and bouncing without activating; now the PDF lives
+          here, post-activation. URL source-of-truth is the same env var
+          the email used to read (FREEGUIDE_PDF_URL); fallback to the
+          known production path if unset so a missing-env-var build
+          doesn't hide the button entirely. */}
+      <section className="mb-10 rounded-lg border border-neutral-200 bg-amber-50/40 p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-amber-800">
+              Your starter guide
+            </p>
+            <p className="mt-1 text-base text-neutral-800">
+              The Simple Blueprint PDF — a 14-page, plain-English starter
+              guide. Save it for later or print it out for the family.
+            </p>
+          </div>
+          <a
+            href={
+              process.env.FREEGUIDE_PDF_URL ??
+              "https://rigginsstrategicsolutions.com/files/simple-blueprint.pdf"
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center justify-center rounded-md border border-amber-700 bg-white px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50"
+          >
+            Download Simple Blueprint (PDF)
+          </a>
+        </div>
+      </section>
+
       <section>
         <h2 className="text-xl font-semibold tracking-tight">Modules</h2>
         <p className="mt-1 text-sm text-neutral-500">

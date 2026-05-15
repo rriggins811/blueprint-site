@@ -112,48 +112,102 @@ export async function sendCoreWelcomeEmail(args: { to: string; firstName?: strin
 // Hotmail recipients (large chunk of the audience). The activation link goes
 // to /activate (a form, not an auth endpoint), so Safe Links pre-fetch is
 // harmless.
+//
+// Body redesign 2026-05-15: removed the "Click here to download the PDF" link
+// at the top of the email — data from 7+ real signups May 11-15 showed every
+// recipient clicked the PDF, got the guide, never clicked Activate. The PDF
+// link was competing with the activation CTA and winning every time. Now the
+// PDF lives on the post-activation Blueprint dashboard. The `pdfUrl` arg is
+// kept (forward-compatible) but ignored inside the body.
 export async function sendFreeGuideEmail(args: {
   to: string;
   firstName?: string | null;
   activationToken: string;
+  /** Kept for forward compatibility; PDF is no longer linked from this email.
+   *  See dashboard/page.tsx for the post-activation PDF download. */
   pdfUrl?: string;
 }): Promise<SendResult> {
-  const greeting = args.firstName ? `Hi ${args.firstName},` : "Hi,";
+  void args.pdfUrl;
   const subject = args.firstName
     ? `Your Simple Blueprint is here, ${args.firstName}`
     : "Your Simple Blueprint is here";
+  const firstName = args.firstName ?? "there";
   const activateUrl =
     `${SITE.url}/activate?token=${encodeURIComponent(args.activationToken)}` +
     `&email=${encodeURIComponent(args.to)}`;
-  const pdfUrl = args.pdfUrl ?? process.env.FREEGUIDE_PDF_URL ?? "";
+
   const html = `
-    <p>${greeting}</p>
-    <p>The Simple Blueprint is the short, plain-English starter guide for families thinking about a senior housing transition. ${
-      pdfUrl
-        ? `<a href="${pdfUrl}">Click here to download the PDF</a>.`
-        : "Your copy of the PDF is on the way."
-    }</p>
-    <p>
-      Want more than a PDF? Activate your free Blueprint account and you will get:
-    </p>
-    <ul>
-      <li>The online interactive version of Module 00 with the 7-day quick start checklist.</li>
-      <li>Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker.</li>
-      <li>A 14-day trial of the SeniorSafe app on iPhone, Android, and the web. Same login.</li>
-    </ul>
-    <p>
-      <a href="${activateUrl}" style="display:inline-block;background:#b45309;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Activate my free account</a>
-    </p>
-    <p style="color:#555;">
-      You will set a password on the next screen. The same password also works
-      in the SeniorSafe app on your phone, so you only need to remember one.
-    </p>
-    <p>If the button does not work, paste this link into your browser:<br><span style="color:#666;font-size:13px;">${activateUrl}</span></p>
-    <p>Activation link is good for 7 days.</p>
-    ${SENIORSAFE_TRIAL_SECTION}
-    <p>Ryan Riggins<br>Riggins Strategic Solutions<br>(336) 553-8933</p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your Simple Blueprint is here</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 24px;">
+
+  <p>Hi ${firstName},</p>
+
+  <p>Your free Blueprint account is ready. One click activates everything:</p>
+
+  <ul style="line-height: 1.7; padding-left: 20px;">
+    <li>The online interactive Module 00 + 7-day Quick Start checklist</li>
+    <li>Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker</li>
+    <li>A 14-day Premium+ trial of the SeniorSafe app on iPhone, Android, and web (same login)</li>
+    <li>Maggie, the AI transition specialist trained on the full Blueprint methodology</li>
+  </ul>
+
+  <p style="text-align: center; margin: 36px 0;">
+    <a href="${activateUrl}" style="background: #B36B3A; color: #ffffff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block; font-size: 16px;">Activate my free account</a>
+  </p>
+
+  <p>You'll set a password on the next screen. The same password also works in the SeniorSafe app on your phone, so you only need to remember one.</p>
+
+  <p style="font-size: 13px; color: #666;">
+    If the button does not work, paste this link into your browser:<br>
+    <a href="${activateUrl}" style="word-break: break-all; color: #B36B3A;">${activateUrl}</a>
+  </p>
+
+  <p style="font-size: 13px; color: #666;">Activation link is good for 7 days.</p>
+
+  <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
+
+  <p style="font-size: 14px; color: #444;">The SeniorSafe app trial includes daily wellness check-ins, secure document vault, private family messaging, and Maggie. No card, no extra signup. Trial is automatic — when it ends you can pick a paid plan or just stop using the app, no charges either way.</p>
+
+  <p style="margin-top: 32px;">
+    Ryan Riggins<br>
+    Riggins Strategic Solutions<br>
+    (336) 553-8933
+  </p>
+
+</body>
+</html>
   `;
-  return send({ to: args.to, subject, html });
+
+  // Explicit plain-text fallback (instead of letting send() auto-derive via
+  // stripHtml). Better deliverability and easier to read in text-only clients.
+  const text = `Hi ${firstName},
+
+Your free Blueprint account is ready. One click activates everything:
+
+- The online interactive Module 00 + 7-day Quick Start checklist
+- Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker
+- A 14-day Premium+ trial of the SeniorSafe app on iPhone, Android, and web (same login)
+- Maggie, the AI transition specialist trained on the full Blueprint methodology
+
+Activate my free account: ${activateUrl}
+
+You'll set a password on the next screen. The same password also works in the SeniorSafe app on your phone, so you only need to remember one.
+
+Activation link is good for 7 days.
+
+The SeniorSafe app trial includes daily wellness check-ins, secure document vault, private family messaging, and Maggie. No card, no extra signup. Trial is automatic — when it ends you can pick a paid plan or just stop using the app, no charges either way.
+
+Ryan Riggins
+Riggins Strategic Solutions
+(336) 553-8933
+`;
+
+  return send({ to: args.to, subject, html, text });
 }
 
 export async function sendPremiumWelcomeEmail(args: {
