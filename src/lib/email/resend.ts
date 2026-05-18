@@ -118,15 +118,65 @@ export async function sendCoreWelcomeEmail(args: { to: string; firstName?: strin
  * If the magnetSlug arg doesn't match any entry, the email silently
  * falls back to the standard Simple Blueprint template.
  */
-const LEAD_MAGNET_EMAIL_META: Record<
-  string,
-  { title: string; subtitle: string; pageCount: number; pdfUrl: string }
-> = {
+type LeadMagnetEmailMeta = {
+  title: string;
+  subtitle: string;
+  pageCount: number;
+  pdfUrl: string;
+  /**
+   * Optional phrase used in the subject line, replacing the default
+   * `${title} guide`. Subject rendered as: "Your ${subjectBase} is here[,
+   * ${firstName}]". Use when the title alone reads awkward in a subject
+   * (e.g. magnet titled "When Mom Falls at 2 AM" wants subjectBase
+   * "Crisis Playbook" instead of "When Mom Falls at 2 AM guide").
+   */
+  subjectBase?: string;
+  /**
+   * Optional phrase used as the bolded text in the intro paragraph,
+   * replacing the default `${title}`. Intro rendered as: "Your
+   * <strong>${introBase}</strong>${introTrailing} is ready, and so is
+   * your free Blueprint account. ...".
+   */
+  introBase?: string;
+  /**
+   * Optional word(s) inserted between the bolded intro phrase and
+   * " is ready". Default is " guide" (CBB + Aging in Place case).
+   * Set to "" to omit the word (e.g. when introBase already contains
+   * "Playbook" / "Guide" / etc.).
+   */
+  introTrailing?: string;
+};
+
+const LEAD_MAGNET_EMAIL_META: Record<string, LeadMagnetEmailMeta> = {
   "cash-buyer-beware": {
     title: "Cash Buyer Beware",
     subtitle: "What to know before Mom signs anything",
     pageCount: 15,
     pdfUrl: "https://rigginsstrategicsolutions.com/downloads/cash-buyer-beware.pdf",
+  },
+  "when-mom-falls-crisis-playbook": {
+    title: "When Mom Falls at 2 AM",
+    subtitle:
+      "The First 30 Minutes (and the 30 Mistakes Most Families Make)",
+    pageCount: 17,
+    pdfUrl:
+      "https://rigginsstrategicsolutions.com/downloads/when-mom-falls-crisis-playbook.pdf",
+    // Subject: "Your Crisis Playbook is here, Ryan"
+    subjectBase: "Crisis Playbook",
+    // Intro bolded phrase: "Your When Mom Falls Crisis Playbook is ready..."
+    introBase: "When Mom Falls Crisis Playbook",
+    introTrailing: "",
+  },
+  "aging-in-place-vs-assisted-living": {
+    title: "Aging in Place vs Assisted Living",
+    subtitle: "The Honest Math (and 5 Questions That Actually Decide)",
+    pageCount: 17,
+    pdfUrl:
+      "https://rigginsstrategicsolutions.com/downloads/aging-in-place-vs-assisted-living.pdf",
+    // Subject: "Your Aging in Place guide is here, Ryan"
+    subjectBase: "Aging in Place guide",
+    // Intro bolded phrase: "Your Aging in Place vs Assisted Living guide is ready..."
+    // (introBase defaults to title; introTrailing defaults to " guide" — both fine)
   },
 };
 
@@ -170,10 +220,16 @@ export async function sendFreeGuideEmail(args: {
       `[freeguide-email] unknown magnetSlug=${args.magnetSlug}, falling back to standard template`
     );
   }
-  const subject = magnetMeta
+  // Subject base: per-magnet override (e.g. "Crisis Playbook") or default
+  // to "<title> guide" (e.g. "Cash Buyer Beware guide"). firstName appended
+  // when present so we never render a trailing comma.
+  const magnetSubjectBase = magnetMeta
+    ? magnetMeta.subjectBase ?? `${magnetMeta.title} guide`
+    : null;
+  const subject = magnetSubjectBase
     ? args.firstName
-      ? `Your ${magnetMeta.title} guide is here, ${args.firstName}`
-      : `Your ${magnetMeta.title} guide is here`
+      ? `Your ${magnetSubjectBase} is here, ${args.firstName}`
+      : `Your ${magnetSubjectBase} is here`
     : args.firstName
     ? `Your Simple Blueprint is here, ${args.firstName}`
     : "Your Simple Blueprint is here";
@@ -188,9 +244,20 @@ export async function sendFreeGuideEmail(args: {
   // below the activation CTA. The activation button stays the primary
   // CTA because the dashboard surfaces both PDFs + Module 00 + tools
   // after activation — bigger conversion target than the PDF alone.
+  // Intro bolded phrase: per-magnet override (e.g. "When Mom Falls Crisis
+  // Playbook") or default to the magnet title (e.g. "Cash Buyer Beware").
+  // introTrailing controls whether " guide" appears between the bolded
+  // phrase and " is ready" (yes for CBB/Aging, no for Crisis Playbook
+  // where "Playbook" already implies the doc type).
+  const introBoldPhrase = magnetMeta
+    ? magnetMeta.introBase ?? magnetMeta.title
+    : null;
+  const introTrailing = magnetMeta
+    ? magnetMeta.introTrailing ?? " guide"
+    : "";
   const introHtml = magnetMeta
     ? `<p>Hi ${firstName},</p>
-  <p>Your <strong>${magnetMeta.title}</strong> guide is ready, and so is your free Blueprint account. One click activates everything — the guide PLUS:</p>`
+  <p>Your <strong>${introBoldPhrase}</strong>${introTrailing} is ready, and so is your free Blueprint account. One click activates everything — the guide PLUS:</p>`
     : `<p>Hi ${firstName},</p>
   <p>Your free Blueprint account is ready. One click activates everything:</p>`;
 
@@ -248,8 +315,9 @@ export async function sendFreeGuideEmail(args: {
   `;
 
   // Plain-text fallback. Magnet-aware variants mirror the HTML structure.
+  // Plain-text mirror of introHtml using the same per-magnet overrides.
   const introText = magnetMeta
-    ? `Your ${magnetMeta.title} guide is ready, and so is your free Blueprint account. One click activates everything — the guide PLUS:`
+    ? `Your ${introBoldPhrase}${introTrailing} is ready, and so is your free Blueprint account. One click activates everything — the guide PLUS:`
     : "Your free Blueprint account is ready. One click activates everything:";
 
   const magnetBackupText = magnetMeta

@@ -79,49 +79,92 @@ export default async function DashboardHome() {
         </div>
       </section>
 
-      {/* Cash Buyer Beware — second lead magnet tile, slotted directly
-          below the Starter Guide tile per the May 18 Protection Guide
-          spec. Cream background (#FCF8EE) + navy button (#1F3A5F) per
-          spec, applied via inline style since blueprint-site Tailwind
-          theme uses only standard tokens (no navy/cream custom colors
-          like rss-site). Available to ALL signed-in users — no premium
-          gating. PDF hosted canonically on rigginsstrategicsolutions.com
-          per the lead-magnet single-source-of-truth convention.
-          GA4 + tracking attribute fires `download_lead_magnet` with
-          magnet + source so dashboard-tile downloads can be attributed
-          separately from the public /guides email-gate flow. */}
+      {/* My Guides — combined dashboard tile listing every published lead
+          magnet (3 as of May 18: Cash Buyer Beware + When Mom Falls
+          Crisis Playbook + Aging in Place vs Assisted Living). Replaces
+          the single-magnet Cash Buyer Beware tile so each new magnet
+          appears here without growing the dashboard hero vertically.
+          Cream background (#FCF8EE) + navy button (#1F3A5F) per the
+          original Protection Guide spec, applied via inline style since
+          blueprint-site Tailwind theme uses only standard tokens (no
+          navy/cream custom colors like rss-site).
+
+          Available to ALL signed-in users — no premium gating. PDFs
+          hosted canonically on rigginsstrategicsolutions.com per the
+          lead-magnet single-source-of-truth convention. GA4 + tracking
+          attribute fires `download_lead_magnet` with magnet + source so
+          dashboard-tile downloads can be attributed separately from the
+          public /guides email-gate flow.
+
+          Inline registry duplicates the rss-site LEAD_MAGNETS list
+          (cross-repo dependency would be heavier than just keeping a
+          short array in sync). Add new magnets here when adding to
+          rss-site/src/lib/lead-magnets.ts. */}
       <section
         className="mb-10 rounded-lg border border-neutral-200 p-5"
         style={{ backgroundColor: "#FCF8EE" }}
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p
-              className="text-sm font-medium uppercase tracking-wide"
-              style={{ color: "#1F3A5F" }}
+        <p
+          className="text-sm font-medium uppercase tracking-wide"
+          style={{ color: "#1F3A5F" }}
+        >
+          Your guides
+        </p>
+        <p className="mt-1 text-base text-neutral-700">
+          The free protection + decision guides you have access to. Save
+          them for later or print them out for the family.
+        </p>
+        <ul className="mt-4 divide-y divide-neutral-200">
+          {[
+            {
+              slug: "cash-buyer-beware",
+              title: "Cash Buyer Beware",
+              subtitle:
+                "The 15-page wholesaler protection guide — what to know before Mom signs anything.",
+              pdfUrl:
+                "https://rigginsstrategicsolutions.com/downloads/cash-buyer-beware.pdf",
+            },
+            {
+              slug: "when-mom-falls-crisis-playbook",
+              title: "When Mom Falls at 2 AM",
+              subtitle:
+                "The 17-page crisis playbook — the first 30 minutes and the 30 mistakes most families make.",
+              pdfUrl:
+                "https://rigginsstrategicsolutions.com/downloads/when-mom-falls-crisis-playbook.pdf",
+            },
+            {
+              slug: "aging-in-place-vs-assisted-living",
+              title: "Aging in Place vs Assisted Living",
+              subtitle:
+                "The 17-page decision guide — real 5-year cost math and the 5 questions that actually decide.",
+              pdfUrl:
+                "https://rigginsstrategicsolutions.com/downloads/aging-in-place-vs-assisted-living.pdf",
+            },
+          ].map((m) => (
+            <li
+              key={m.slug}
+              className="flex flex-col gap-3 py-4 first:pt-3 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
             >
-              Protection guide
-            </p>
-            <p className="mt-1 text-base font-semibold text-neutral-900">
-              Cash Buyer Beware
-            </p>
-            <p className="mt-1 text-sm text-neutral-700">
-              The 15-page wholesaler protection guide. What to know before
-              Mom signs anything.
-            </p>
-          </div>
-          <a
-            href="https://rigginsstrategicsolutions.com/downloads/cash-buyer-beware.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-track="download_lead_magnet"
-            data-track-params='{"magnet":"cash-buyer-beware","source":"blueprint_dashboard"}'
-            className="inline-flex shrink-0 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-            style={{ backgroundColor: "#1F3A5F" }}
-          >
-            Download Cash Buyer Beware (PDF)
-          </a>
-        </div>
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-neutral-900">
+                  {m.title}
+                </p>
+                <p className="mt-0.5 text-sm text-neutral-700">{m.subtitle}</p>
+              </div>
+              <a
+                href={m.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-track="download_lead_magnet"
+                data-track-params={`{"magnet":"${m.slug}","source":"blueprint_dashboard"}`}
+                className="inline-flex shrink-0 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                style={{ backgroundColor: "#1F3A5F" }}
+              >
+                Download PDF
+              </a>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section>
