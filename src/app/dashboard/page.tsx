@@ -54,7 +54,7 @@ export default async function DashboardHome() {
           the email used to read (FREEGUIDE_PDF_URL); fallback to the
           known production path if unset so a missing-env-var build
           doesn't hide the button entirely. */}
-      <section className="mb-10 rounded-lg border border-neutral-200 bg-amber-50/40 p-5">
+      <section className="mb-6 rounded-lg border border-neutral-200 bg-amber-50/40 p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-amber-800">
@@ -75,6 +75,51 @@ export default async function DashboardHome() {
             className="inline-flex shrink-0 items-center justify-center rounded-md border border-amber-700 bg-white px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50"
           >
             Download Simple Blueprint (PDF)
+          </a>
+        </div>
+      </section>
+
+      {/* Cash Buyer Beware — second lead magnet tile, slotted directly
+          below the Starter Guide tile per the May 18 Protection Guide
+          spec. Cream background (#FCF8EE) + navy button (#1F3A5F) per
+          spec, applied via inline style since blueprint-site Tailwind
+          theme uses only standard tokens (no navy/cream custom colors
+          like rss-site). Available to ALL signed-in users — no premium
+          gating. PDF hosted canonically on rigginsstrategicsolutions.com
+          per the lead-magnet single-source-of-truth convention.
+          GA4 + tracking attribute fires `download_lead_magnet` with
+          magnet + source so dashboard-tile downloads can be attributed
+          separately from the public /guides email-gate flow. */}
+      <section
+        className="mb-10 rounded-lg border border-neutral-200 p-5"
+        style={{ backgroundColor: "#FCF8EE" }}
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p
+              className="text-sm font-medium uppercase tracking-wide"
+              style={{ color: "#1F3A5F" }}
+            >
+              Protection guide
+            </p>
+            <p className="mt-1 text-base font-semibold text-neutral-900">
+              Cash Buyer Beware
+            </p>
+            <p className="mt-1 text-sm text-neutral-700">
+              The 15-page wholesaler protection guide. What to know before
+              Mom signs anything.
+            </p>
+          </div>
+          <a
+            href="https://rigginsstrategicsolutions.com/downloads/cash-buyer-beware.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-track="download_lead_magnet"
+            data-track-params='{"magnet":"cash-buyer-beware","source":"blueprint_dashboard"}'
+            className="inline-flex shrink-0 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+            style={{ backgroundColor: "#1F3A5F" }}
+          >
+            Download Cash Buyer Beware (PDF)
           </a>
         </div>
       </section>
