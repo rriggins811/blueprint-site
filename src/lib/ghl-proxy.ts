@@ -134,6 +134,13 @@ export const GHL_TAGS = {
   SENIORSAFE_FREE: "seniorsafe-free",
   SENIORSAFE_TRIAL_ACTIVE: "seniorsafe trial - active",
   SENIORSAFE_PAID: "seniorsafe-paid",
+  // Added in Phase 6 (May 18) when Kit was fully retired — preserves the
+  // churn signal that previously lived on the Kit `seniorsafe-churned`
+  // tag (ID 19444482). Both blueprint-site notifyChurn (Stripe subscription
+  // deleted fires for SeniorSafe subs because Stripe acct is shared) AND
+  // senior-safe stripe-webhook customer.subscription.deleted apply this
+  // tag — idempotent so the double-tag is safe.
+  SENIORSAFE_CHURNED: "seniorsafe-churned",
 
   // Blueprint product tags (defined in SOP as "future" — OK to use now)
   PRODUCT_BLUEPRINT_CORE: "product-blueprint-core",
