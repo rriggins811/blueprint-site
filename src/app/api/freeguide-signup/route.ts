@@ -4,6 +4,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import { mintActivationToken } from "@/lib/activation-token";
 import { sendFreeGuideEmail } from "@/lib/email/resend";
 import { notifyFreeSignup } from "@/lib/webhooks";
+import { upsertResendAudienceContact } from "@/lib/resend-audience";
 
 export const runtime = "nodejs";
 
@@ -148,6 +149,37 @@ export async function POST(req: NextRequest) {
       source,
       signed_up_at: new Date().toISOString(),
       user_id: "pending-activation",
+    })
+  );
+
+  // Resend audience forward-sync (added 2026-05-18). Every Blueprint
+  // signup — whether from /freeguide, /guides (Cash Buyer Beware), or
+  // any future magnet flow — flows through this endpoint, so this is
+  // the single point that keeps the Resend newsletter audience aligned
+  // with the canonical Blueprint signup list going forward.
+  //
+  // Pre-May-18 contacts were one-time backfilled from GHL via
+  // /tmp/backfill.mjs after the audience-empty discovery. From here on,
+  // no manual sync needed.
+  //
+  // Wrapped in after() — best-effort, never blocks the user's signup
+  // response. Logs reason on failure (no_audiences_key when the env
+  // var isn't set yet, http_4xx/5xx for Resend errors).
+  after(
+    upsertResendAudienceContact({
+      email,
+      firstName,
+      lastName: lastName ?? null,
+    }).then((r) => {
+      if (!r.ok) {
+        console.warn(
+          `[freeguide-signup] resend audience upsert skipped/failed reason=${r.reason}`
+        );
+      } else {
+        console.info(
+          `[freeguide-signup] resend audience upsert ok contactId=${r.contactId}`
+        );
+      }
     })
   );
 
