@@ -10,11 +10,29 @@ export const runtime = "nodejs";
 const SignupSchema = z.object({
   email: z.string().email().transform((s) => s.toLowerCase().trim()),
   firstName: z.string().trim().min(1).max(100),
-  lastName: z.string().trim().min(1).max(100),
+  // lastName is OPTIONAL — /freeguide form lets users skip it, and the
+  // newer /guides lead-magnet form doesn't collect it at all. Empty
+  // string + missing both normalize to undefined.
+  lastName: z
+    .string()
+    .trim()
+    .max(100)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : undefined)),
   phone: z.string().trim().max(40).optional().or(z.literal("")).transform((v) =>
     v ? v : undefined
   ),
   source: z.string().trim().max(100).optional().default("rss-freeguide"),
+  // Optional lead-magnet slug. When present, the welcome email template
+  // adds a direct PDF link section for that magnet (so the user gets
+  // immediate access while the activation/dashboard flow plays out).
+  // When absent, the standard Simple Blueprint activation email fires
+  // unchanged. Slug format: kebab-case, must match a known magnet on
+  // rss-site lib/lead-magnets.ts. Lookup is permissive — unknown slug
+  // is logged + silently downgraded to the standard email (won't fail
+  // the signup).
+  magnet: z.string().trim().max(80).optional(),
 });
 
 // POST /api/freeguide-signup
@@ -60,33 +78,58 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, firstName, lastName, phone, source } = parsed.data;
+  const { email, firstName, lastName, phone, source, magnet } = parsed.data;
   const admin = createAdminSupabaseClient();
 
   // Mint the activation token. Self-contained — does not touch Supabase auth.
-  const activationToken = mintActivationToken({ email, firstName, lastName });
+  // mintActivationToken's signature requires lastName as string; fall back
+  // to empty string when the form didn't collect it (the magnet flow).
+  const activationToken = mintActivationToken({
+    email,
+    firstName,
+    lastName: lastName ?? "",
+  });
 
   // Send the activation email. Failure here is logged but not fatal — the
   // user will see "check your email" on the rss-site /freeguide form anyway,
-  // and Make.com / Twilio will still notify Ryan.
+  // and the GHL/Twilio fan-out still notifies Ryan.
+  //
+  // When `magnet` is present (lead-magnet flow from /guides), the email
+  // template adds a direct PDF link section pointing at the magnet so
+  // the user gets immediate access alongside the activation CTA.
   const emailResult = await sendFreeGuideEmail({
     to: email,
     firstName,
     activationToken,
+    magnetSlug: magnet,
   });
   if (!emailResult.ok) {
     console.warn(`[freeguide-signup] activation email failed: ${emailResult.reason}`);
   }
 
   // Leads row for analytics. Parallel-write window — duplicates ok.
+  // form_type reflects whether this is a generic starter-guide signup or
+  // a magnet-specific entry door, so downstream queries can segment by
+  // funnel. Matches the form_type rss-site writes for the same signup
+  // (constraint relaxed via leads_form_type_allow_lead_magnet_prefix
+  // migration on 2026-05-18 to allow lead-magnet-* values).
+  const leadFormType = magnet ? `lead-magnet-${magnet}` : "starter-guide";
   const { error: leadErr } = await admin.from("leads").insert({
-    form_type: "starter-guide",
+    form_type: leadFormType,
     email,
     first_name: firstName,
-    last_name: lastName,
+    last_name: lastName ?? null,
     phone: phone ?? null,
     source,
-    raw_payload: { email, firstName, lastName, phone, source, channel: "blueprint-activation" },
+    raw_payload: {
+      email,
+      firstName,
+      lastName,
+      phone,
+      source,
+      channel: "blueprint-activation",
+      ...(magnet ? { magnet } : {}),
+    },
   });
   if (leadErr) {
     console.warn(`[freeguide-signup] lead insert failed: ${leadErr.message}`);
@@ -100,7 +143,7 @@ export async function POST(req: NextRequest) {
     notifyFreeSignup({
       email,
       firstName,
-      lastName,
+      lastName: lastName ?? undefined,
       phone,
       source,
       signed_up_at: new Date().toISOString(),

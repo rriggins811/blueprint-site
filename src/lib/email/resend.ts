@@ -106,6 +106,30 @@ export async function sendCoreWelcomeEmail(args: { to: string; firstName?: strin
   return send({ to: args.to, subject, html });
 }
 
+/**
+ * Lead-magnet email metadata. Mirrors the per-magnet entries in
+ * rss-site/src/lib/lead-magnets.ts (single source of truth for the
+ * registry lives on rss-site; blueprint-site duplicates only the
+ * email-template fields here so the welcome email can render magnet-
+ * aware content without a cross-repo dependency).
+ *
+ * When rss-site adds a new magnet, add a matching entry here so the
+ * Blueprint welcome email can include the direct PDF link for it.
+ * If the magnetSlug arg doesn't match any entry, the email silently
+ * falls back to the standard Simple Blueprint template.
+ */
+const LEAD_MAGNET_EMAIL_META: Record<
+  string,
+  { title: string; subtitle: string; pageCount: number; pdfUrl: string }
+> = {
+  "cash-buyer-beware": {
+    title: "Cash Buyer Beware",
+    subtitle: "What to know before Mom signs anything",
+    pageCount: 15,
+    pdfUrl: "https://rigginsstrategicsolutions.com/downloads/cash-buyer-beware.pdf",
+  },
+};
+
 // Free guide email — sent immediately on /freeguide form submit. Replaces the
 // magic-link primary auth flow because Outlook Safe Links pre-fetches magic
 // link URLs and consumes the one-time code, breaking auth for Outlook /
@@ -117,8 +141,14 @@ export async function sendCoreWelcomeEmail(args: { to: string; firstName?: strin
 // at the top of the email — data from 7+ real signups May 11-15 showed every
 // recipient clicked the PDF, got the guide, never clicked Activate. The PDF
 // link was competing with the activation CTA and winning every time. Now the
-// PDF lives on the post-activation Blueprint dashboard. The `pdfUrl` arg is
-// kept (forward-compatible) but ignored inside the body.
+// PDF lives on the post-activation Blueprint dashboard.
+//
+// May-18 lead-magnet flow (`magnetSlug` arg): /guides signups for a
+// specific PDF (e.g. Cash Buyer Beware) get a magnet-aware version of
+// this email — subject names the magnet, body adds a "direct PDF link
+// as backup" section per the protection-guide funnel spec. Primary CTA
+// stays the activation button (drives dashboard discovery of bonus
+// modules + tools).
 export async function sendFreeGuideEmail(args: {
   to: string;
   firstName?: string | null;
@@ -126,9 +156,25 @@ export async function sendFreeGuideEmail(args: {
   /** Kept for forward compatibility; PDF is no longer linked from this email.
    *  See dashboard/page.tsx for the post-activation PDF download. */
   pdfUrl?: string;
+  /** Optional lead-magnet slug (kebab-case). When set + matched in
+   *  LEAD_MAGNET_EMAIL_META, the email renders the magnet-aware
+   *  template with subject + body referencing that specific PDF. */
+  magnetSlug?: string;
 }): Promise<SendResult> {
   void args.pdfUrl;
-  const subject = args.firstName
+  const magnetMeta = args.magnetSlug
+    ? LEAD_MAGNET_EMAIL_META[args.magnetSlug]
+    : undefined;
+  if (args.magnetSlug && !magnetMeta) {
+    console.warn(
+      `[freeguide-email] unknown magnetSlug=${args.magnetSlug}, falling back to standard template`
+    );
+  }
+  const subject = magnetMeta
+    ? args.firstName
+      ? `Your ${magnetMeta.title} guide is here, ${args.firstName}`
+      : `Your ${magnetMeta.title} guide is here`
+    : args.firstName
     ? `Your Simple Blueprint is here, ${args.firstName}`
     : "Your Simple Blueprint is here";
   const firstName = args.firstName ?? "there";
@@ -136,18 +182,34 @@ export async function sendFreeGuideEmail(args: {
     `${SITE.url}/activate?token=${encodeURIComponent(args.activationToken)}` +
     `&email=${encodeURIComponent(args.to)}`;
 
+  // Magnet-aware intro line + bonus PDF download block. When magnetMeta
+  // is present, the opening paragraph references the specific PDF the
+  // user signed up for and a "backup direct download" link appears just
+  // below the activation CTA. The activation button stays the primary
+  // CTA because the dashboard surfaces both PDFs + Module 00 + tools
+  // after activation — bigger conversion target than the PDF alone.
+  const introHtml = magnetMeta
+    ? `<p>Hi ${firstName},</p>
+  <p>Your <strong>${magnetMeta.title}</strong> guide is ready, and so is your free Blueprint account. One click activates everything — the guide PLUS:</p>`
+    : `<p>Hi ${firstName},</p>
+  <p>Your free Blueprint account is ready. One click activates everything:</p>`;
+
+  const magnetBackupHtml = magnetMeta
+    ? `<p style="font-size: 13px; color: #666; text-align: center; margin: -16px 0 24px 0;">
+    Or grab the ${magnetMeta.title} PDF directly: <a href="${magnetMeta.pdfUrl}" style="color: #B36B3A;">${magnetMeta.pdfUrl}</a>
+  </p>`
+    : "";
+
   const html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Your Simple Blueprint is here</title>
+  <title>${subject}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 24px;">
 
-  <p>Hi ${firstName},</p>
-
-  <p>Your free Blueprint account is ready. One click activates everything:</p>
+  ${introHtml}
 
   <ul style="line-height: 1.7; padding-left: 20px;">
     <li>The online interactive Module 00 + 7-day Quick Start checklist</li>
@@ -159,6 +221,8 @@ export async function sendFreeGuideEmail(args: {
   <p style="text-align: center; margin: 36px 0;">
     <a href="${activateUrl}" style="background: #B36B3A; color: #ffffff; padding: 14px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block; font-size: 16px;">Activate my free account</a>
   </p>
+
+  ${magnetBackupHtml}
 
   <p>You'll set a password on the next screen. The same password also works in the SeniorSafe app on your phone, so you only need to remember one.</p>
 
@@ -183,11 +247,18 @@ export async function sendFreeGuideEmail(args: {
 </html>
   `;
 
-  // Explicit plain-text fallback (instead of letting send() auto-derive via
-  // stripHtml). Better deliverability and easier to read in text-only clients.
+  // Plain-text fallback. Magnet-aware variants mirror the HTML structure.
+  const introText = magnetMeta
+    ? `Your ${magnetMeta.title} guide is ready, and so is your free Blueprint account. One click activates everything — the guide PLUS:`
+    : "Your free Blueprint account is ready. One click activates everything:";
+
+  const magnetBackupText = magnetMeta
+    ? `\nOr grab the ${magnetMeta.title} PDF directly: ${magnetMeta.pdfUrl}\n`
+    : "";
+
   const text = `Hi ${firstName},
 
-Your free Blueprint account is ready. One click activates everything:
+${introText}
 
 - The online interactive Module 00 + 7-day Quick Start checklist
 - Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker
@@ -195,7 +266,7 @@ Your free Blueprint account is ready. One click activates everything:
 - Maggie, the AI transition specialist trained on the full Blueprint methodology
 
 Activate my free account: ${activateUrl}
-
+${magnetBackupText}
 You'll set a password on the next screen. The same password also works in the SeniorSafe app on your phone, so you only need to remember one.
 
 Activation link is good for 7 days.
