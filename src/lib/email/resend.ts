@@ -178,6 +178,22 @@ const LEAD_MAGNET_EMAIL_META: Record<string, LeadMagnetEmailMeta> = {
     // Intro bolded phrase: "Your Aging in Place vs Assisted Living guide is ready..."
     // (introBase defaults to title; introTrailing defaults to " guide" — both fine)
   },
+  "medicare-coverage-gaps": {
+    title: "Medicare Coverage Gaps Most Families Don't Know About",
+    subtitle:
+      "The hospital and rehab questions that cost families $10K to $30K",
+    pageCount: 17,
+    pdfUrl:
+      "https://rigginsstrategicsolutions.com/downloads/medicare-coverage-gaps.pdf",
+    // Title is too long to default — would render "Your Medicare Coverage
+    // Gaps Most Families Don't Know About guide is here, Ryan". Shorten
+    // for both subject and intro bold so the email reads naturally.
+    // Subject: "Your Medicare Coverage Gaps guide is here, Ryan"
+    subjectBase: "Medicare Coverage Gaps guide",
+    // Intro bolded phrase: "Your Medicare Coverage Gaps guide is ready..."
+    introBase: "Medicare Coverage Gaps",
+    // introTrailing defaults to " guide" — keep default
+  },
 };
 
 // Free guide email — sent immediately on /freeguide form submit. Replaces the

@@ -140,6 +140,14 @@ export default async function DashboardHome() {
               pdfUrl:
                 "https://rigginsstrategicsolutions.com/downloads/aging-in-place-vs-assisted-living.pdf",
             },
+            {
+              slug: "medicare-coverage-gaps",
+              title: "Medicare Coverage Gaps Most Families Don't Know About",
+              subtitle:
+                "The 17-page coverage guide — the hospital and rehab questions that cost families $10K to $30K.",
+              pdfUrl:
+                "https://rigginsstrategicsolutions.com/downloads/medicare-coverage-gaps.pdf",
+            },
           ].map((m) => (
             <li
               key={m.slug}
