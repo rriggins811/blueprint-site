@@ -85,13 +85,14 @@ export default async function ActivatePage({
             />
           </label>
           <label className="flex flex-col gap-2 text-sm font-medium">
-            Last name
+            Last name{" "}
+            <span className="text-xs font-normal text-neutral-500">
+              (optional)
+            </span>
             <input
               type="text"
               name="lastName"
               defaultValue={lastName ?? ""}
-              required
-              minLength={1}
               maxLength={100}
               autoComplete="family-name"
               className="rounded-md border border-neutral-300 px-3 py-2 text-base"

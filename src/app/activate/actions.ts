@@ -13,7 +13,19 @@ const FormSchema = z
   .object({
     token: z.string().min(10),
     firstName: z.string().trim().min(1).max(100),
-    lastName: z.string().trim().min(1).max(100),
+    // lastName is OPTIONAL (relaxed 2026-05-26) because the /guides
+    // lead-magnet form deliberately doesn't collect it (less friction at
+    // signup), so requiring it on /activate created an unfillable field
+    // for 100% of magnet signups. Activated users without a last name
+    // simply have an empty string stored downstream; fan-out, GHL sync,
+    // and Resend audience writes already tolerate empty/null.
+    lastName: z
+      .string()
+      .trim()
+      .max(100)
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => v ?? ""),
     password: z.string().min(8).max(200),
     confirm: z.string(),
   })

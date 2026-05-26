@@ -277,11 +277,15 @@ export async function sendFreeGuideEmail(args: {
     : `<p>Hi ${firstName},</p>
   <p>Your free Blueprint account is ready. One click activates everything:</p>`;
 
-  const magnetBackupHtml = magnetMeta
-    ? `<p style="font-size: 13px; color: #666; text-align: center; margin: -16px 0 24px 0;">
-    Or grab the ${magnetMeta.title} PDF directly: <a href="${magnetMeta.pdfUrl}" style="color: #B36B3A;">${magnetMeta.pdfUrl}</a>
-  </p>`
-    : "";
+  // KILLED 2026-05-26: the magnet-backup PDF link removed because it was the
+  // single biggest leak in the magnet activation funnel. Data from May 1-25
+  // showed 12 of 12 cash-buyer-beware leads + 1 of 1 medicare-coverage-gaps
+  // lead failed to activate (0% rate) versus the starter-guide funnel at 23%.
+  // The competing PDF link satisfied the user's need (get the PDF) and removed
+  // any incentive to complete activation. Same pattern fixed for starter-guide
+  // on 2026-05-15 (see body redesign comment ~L206). PDF now lives behind
+  // activation, surfaced on the dashboard for all magnet signups.
+  const magnetBackupHtml = "";
 
   const html = `
 <!DOCTYPE html>
