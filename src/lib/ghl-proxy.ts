@@ -4,8 +4,9 @@
  * Per memory/sop_ghl_operations.md (locked May 14, 2026), all GHL writes
  * go through this proxy. The real GHL Private Integration Token lives as
  * a Supabase Edge Function secret (`GHL_PIT_TOKEN`) and never sits in
- * any sandbox, repo, or Vercel env. We authenticate the proxy call with
- * the publishable Supabase anon JWT — that's safe to ship in source.
+ * any sandbox, repo, or Vercel env. The proxy call is authenticated with
+ * the Supabase service-role key (server-side only, never shipped to the
+ * client). The proxy rejects any other key (2026-05-29 security audit).
  *
  * Allowed write paths (enforced by the proxy):
  *   /contacts, /contacts/upsert, /contacts/tags,
@@ -30,9 +31,14 @@ function getProxyEndpoint(): string {
   return `${url}/functions/v1/ghl-proxy`;
 }
 
-function getAnonKey(): string {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!key) throw new Error("NEXT_PUBLIC_SUPABASE_ANON_KEY not set");
+function getProxyAuthKey(): string {
+  // Server-side only. The ghl-proxy Edge Function authenticates callers by
+  // the Supabase service-role key (2026-05-29 security audit: the proxy was
+  // previously an open relay that accepted the public anon key, exposing the
+  // CRM). This module is imported only by server routes, so the key never
+  // reaches the client bundle.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY not set");
   return key;
 }
 
@@ -49,10 +55,10 @@ export async function callGhlProxy<T = unknown>(args: {
   injectLocation?: boolean;
 }): Promise<GhlProxyResult<T>> {
   let endpoint: string;
-  let anon: string;
+  let authKey: string;
   try {
     endpoint = getProxyEndpoint();
-    anon = getAnonKey();
+    authKey = getProxyAuthKey();
   } catch (err) {
     return {
       ok: false,
@@ -65,7 +71,7 @@ export async function callGhlProxy<T = unknown>(args: {
     const res = await fetch(endpoint, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${anon}`,
+        Authorization: `Bearer ${authKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
