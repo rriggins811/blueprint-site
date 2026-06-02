@@ -40,7 +40,11 @@ export default async function ModulePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // Preserve the destination through login so a cold, logged-out click (e.g. a
+  // /dashboard/module-01 link in a post-purchase email) lands back on this page
+  // after sign-in instead of stranding on a bare login screen. The login flow
+  // already honors ?next= (login/actions.ts safeNext) for email + Google.
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/dashboard/${moduleSlug}`)}`);
 
   const { data: profile } = await supabase
     .from("user_profile")

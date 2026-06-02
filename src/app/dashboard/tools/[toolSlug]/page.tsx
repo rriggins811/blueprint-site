@@ -62,7 +62,11 @@ export default async function ToolPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // Preserve the destination through login so a cold, logged-out click (e.g. a
+  // Transition Cost Estimator link in a post-purchase email) lands back on this
+  // tool after sign-in instead of stranding on a bare login screen. The login
+  // flow already honors ?next= (login/actions.ts safeNext) for email + Google.
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/dashboard/tools/${toolSlug}`)}`);
   const { data: profile } = await supabase
     .from("user_profile")
     .select("course_access")
