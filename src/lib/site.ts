@@ -8,9 +8,15 @@ export const SITE = {
   rssSite: "https://rigginsstrategicsolutions.com",
   seniorsafeSite: "https://seniorsafeapp.com",
   supportEmail: "support@rigginsstrategicsolutions.com",
+  // 60-minute Premium planning call. Hardcoded single source of truth (mirrors
+  // rss-site src/lib/booking.ts). Google Calendar appointment schedule (Google
+  // Workspace, already paid; Google Meet auto-attaches). cal.com retired Jun
+  // 2026. The old NEXT_PUBLIC_CAL_BOOKING_URL env override was dropped on
+  // purpose: NEXT_PUBLIC_* vars inline at build time, so a stale Vercel value
+  // would have silently overridden this. The Vercel env var is now dead config
+  // (safe to delete).
   premiumCalBookingUrl:
-    process.env.NEXT_PUBLIC_CAL_BOOKING_URL ??
-    "https://cal.com/ryan-riggins/60min",
+    "https://calendar.google.com/calendar/appointments/schedules/AcZssZ36_aKkOtOdsloP36J9PSKl2qOSD2bYnDU3mCfdYauXFjxjgSq5B_T0Rrb7CfZltK4uZF6eAfnu",
   premiumSupportDays: 90,
 } as const;
 

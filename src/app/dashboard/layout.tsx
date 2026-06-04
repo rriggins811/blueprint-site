@@ -202,7 +202,11 @@ function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
         <div className="text-sm">
           <p className="font-semibold text-amber-900">
-            Premium. Book your 60-minute strategy call with Ryan.
+            Book your 60-minute planning call with Ryan.
+          </p>
+          <p className="mt-0.5 text-xs text-amber-800">
+            Come ready to talk through your family&rsquo;s situation. You&rsquo;re
+            welcome to invite a sibling.
           </p>
           {expiresAt ? (
             <p className="mt-0.5 text-xs text-amber-800">
