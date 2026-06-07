@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { MODULES } from "@/lib/blueprint-modules";
 import { loadModuleContent } from "@/lib/modules-content";
+import { ModuleVideo } from "@/components/ModuleVideo";
+import { resolveModuleVideoUrl } from "@/lib/module-video";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { toolsForModule } from "@/lib/tools-registry";
 import { parseCourseAccess, isModuleUnlocked, isToolUnlocked } from "@/lib/access";
@@ -68,6 +70,10 @@ export default async function ModulePage({
     options: { parseFrontmatter: true },
   });
 
+  // Resolved here, after the tier gate, so a signed premium URL is only minted
+  // for a customer who is allowed to see it. Core modules get a public URL.
+  const videoSrc = await resolveModuleVideoUrl(content.module);
+
   return (
     <main className="mx-auto w-full max-w-3xl px-6 py-10">
       <Link
@@ -97,6 +103,8 @@ export default async function ModulePage({
           <p className="mt-2 text-sm text-neutral-500">{frontmatter.subtitle}</p>
         ) : null}
       </header>
+
+      <ModuleVideo src={videoSrc} />
 
       <article className="prose-blueprint mt-10">{rendered}</article>
 
