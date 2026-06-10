@@ -81,16 +81,30 @@ const SENIORSAFE_TRIAL_SECTION = `
     </p>
 `;
 
-export async function sendCoreWelcomeEmail(args: { to: string; firstName?: string | null }) {
+export async function sendCoreWelcomeEmail(args: {
+  to: string;
+  firstName?: string | null;
+  /** One-click magic-login link that lands on /dashboard. When present it is
+   *  used as the primary CTA so the buyer is logged in on click. A permanent
+   *  /dashboard link is always shown alongside it as a backstop (the magic
+   *  link expires), and the URL is included in the plain-text part too. */
+  loginUrl?: string;
+}) {
   const greeting = args.firstName ? `Hi ${args.firstName},` : "Welcome,";
   const subject = "Your Blueprint is ready";
-  const dashboardUrl = `${SITE.url}/dashboard`;
+  const dashboardUrl = `${SITE.url}/dashboard`; // permanent backstop link
+  const ctaUrl = args.loginUrl ?? dashboardUrl; // one-click login when available
+  // Permanent-link fallback line, only when the CTA is the expiring magic link.
+  const fallbackHtml = args.loginUrl
+    ? `<p style="font-size:13px;color:#666;">The link above logs you in automatically and expires after a while. You can always sign in later at <a href="${dashboardUrl}">${dashboardUrl}</a>.</p>`
+    : "";
   const html = `
     <p>${greeting}</p>
     <p>You just bought the Senior Transition Blueprint. Thank you. Here is what to do next.</p>
     <p>
-      <a href="${dashboardUrl}">Open your dashboard</a> and start with Module 00. It is the orientation lesson and lays out the 7-day quick start. About 15 minutes.
+      <a href="${ctaUrl}">Open your dashboard</a> and start with Module 00. It is the orientation lesson and lays out the 7-day quick start. About 15 minutes.
     </p>
+    ${fallbackHtml}
     <p>
       A few things to know:
     </p>
@@ -103,7 +117,28 @@ export async function sendCoreWelcomeEmail(args: { to: string; firstName?: strin
     <p>Ryan</p>
     <p style="color:#888;font-size:12px;">Riggins Strategic Solutions</p>
   `;
-  return send({ to: args.to, subject, html });
+  // Explicit plain-text part: stripHtml would delete <a href> and keep only the
+  // anchor text, erasing the login URL. Mirror the HTML with the literal URLs.
+  const fallbackText = args.loginUrl
+    ? `\n(The link above logs you in automatically and expires after a while. You can always sign in later at ${dashboardUrl})\n`
+    : "";
+  const text = `${greeting}
+
+You just bought the Senior Transition Blueprint. Thank you. Here is what to do next.
+
+Open your dashboard and start with Module 00 (about 15 minutes):
+${ctaUrl}
+${fallbackText}
+A few things to know:
+- You have lifetime access. The 19 modules and every tool stay yours.
+- Self-paced. Use what fits your situation, skip what does not.
+- If you get stuck, reply to this email. I read every one.
+
+Plus: your Blueprint signup activated a 14-day Premium+ trial of the SeniorSafe app, same login: https://app.seniorsafeapp.com
+
+Ryan
+Riggins Strategic Solutions`;
+  return send({ to: args.to, subject, html, text });
 }
 
 /**
@@ -372,12 +407,21 @@ Riggins Strategic Solutions
 export async function sendPremiumWelcomeEmail(args: {
   to: string;
   firstName?: string | null;
+  /** One-click magic-login link that lands on /dashboard. When present it is
+   *  used as the primary dashboard CTA so the buyer is logged in on click. A
+   *  permanent /dashboard link is always shown alongside it as a backstop (the
+   *  magic link expires), and the URL is included in the plain-text part too. */
+  loginUrl?: string;
 }) {
   const greeting = args.firstName ? `Hi ${args.firstName},` : "Welcome,";
   const subject = "Your Premium Blueprint is ready, and so am I";
-  const dashboardUrl = `${SITE.url}/dashboard`;
+  const dashboardUrl = `${SITE.url}/dashboard`; // permanent backstop link
+  const ctaUrl = args.loginUrl ?? dashboardUrl; // one-click login when available
   const calUrl = SITE.premiumCalBookingUrl;
   const intakeUrl = `${SITE.url}/api/pdf/tool-19b-premium-intake-form`;
+  const fallbackHtml = args.loginUrl
+    ? `<p style="font-size:13px;color:#666;">That dashboard link logs you in automatically and expires after a while. You can always sign in later at <a href="${dashboardUrl}">${dashboardUrl}</a>.</p>`
+    : "";
   const html = `
     <p>${greeting}</p>
     <p>You did not just buy the course. You bought a 60-minute working session with me, plus 90 days of email support. Thank you.</p>
@@ -393,11 +437,32 @@ export async function sendPremiumWelcomeEmail(args: {
       </li>
     </ol>
     <p>
-      <a href="${dashboardUrl}">Your dashboard is here</a>. The Premium banner at the top has the booking link too, in case you need it later.
+      <a href="${ctaUrl}">Your dashboard is here</a>. The Premium banner at the top has the booking link too, in case you need it later.
     </p>
+    ${fallbackHtml}
     <p>I will email you the day before our call. Until then, reply to this email if you need anything.</p>
     <p>Ryan</p>
     <p style="color:#888;font-size:12px;">Riggins Strategic Solutions. You have Premium support until 90 days from your purchase date.</p>
   `;
-  return send({ to: args.to, subject, html });
+  // Explicit plain-text part so the login + dashboard URLs survive (stripHtml
+  // would keep only the anchor text and drop the hrefs).
+  const fallbackText = args.loginUrl
+    ? `\n(That link logs you in automatically and expires after a while. You can always sign in later at ${dashboardUrl})\n`
+    : "";
+  const text = `${greeting}
+
+You did not just buy the course. You bought a 60-minute working session with me, plus 90 days of email support. Thank you.
+
+Two things to do this week:
+
+1. Book your strategy call (60 minutes, weekdays only; pick at least a week out): ${calUrl}
+2. Fill out the intake form and email it back before the call: ${intakeUrl}
+
+Your dashboard is here: ${ctaUrl}
+${fallbackText}
+I will email you the day before our call. Until then, reply to this email if you need anything.
+
+Ryan
+Riggins Strategic Solutions. You have Premium support until 90 days from your purchase date.`;
+  return send({ to: args.to, subject, html, text });
 }

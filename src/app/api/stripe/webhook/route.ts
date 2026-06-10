@@ -211,26 +211,55 @@ export async function POST(req: NextRequest) {
     `blueprint_${tier}_purchase`
   );
 
-  // Send tier-appropriate welcome via Resend (silent skip if no API key).
+  // Parse the buyer's name for the welcome email + downstream fan-out.
   const customerName = session.customer_details?.name ?? null;
   const firstName = customerName?.split(" ")[0] ?? null;
   const lastName =
     customerName && customerName.split(" ").length > 1
       ? customerName.split(" ").slice(1).join(" ")
       : undefined;
+
+  // One-click login link carried INSIDE the welcome email. We mint the
+  // magic-link token with the admin client and build the URL ourselves so it
+  // targets our /auth/callback (token_hash + type), which verifyOtp-exchanges
+  // it into a real cookie session. The previous admin.auth.signInWithOtp sent
+  // a SEPARATE Supabase-templated email whose link the callback could not
+  // exchange ("Missing auth code"); minting the token here lets the single
+  // Resend welcome email carry a login link that actually works. generateLink
+  // only MINTS the token (it sends no email) and is not subject to the email
+  // OTP rate limits. Best-effort: on failure loginUrl stays undefined and the
+  // email falls back to a plain /dashboard link (buyer can still get in via
+  // password reset or Google sign-in).
+  let loginUrl: string | undefined;
+  try {
+    const { data: linkData, error: linkErr } =
+      await admin.auth.admin.generateLink({ type: "magiclink", email });
+    const hashedToken = linkData?.properties?.hashed_token;
+    if (linkErr || !hashedToken) {
+      console.warn(
+        `[stripe webhook] generateLink failed for ${email}: ${
+          linkErr?.message ?? "no hashed_token returned"
+        }`
+      );
+    } else {
+      loginUrl =
+        `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` +
+        `?token_hash=${encodeURIComponent(hashedToken)}` +
+        `&type=magiclink&next=/dashboard`;
+    }
+  } catch (err) {
+    console.warn(
+      `[stripe webhook] generateLink threw for ${email}: ${
+        err instanceof Error ? err.message : "unknown"
+      }`
+    );
+  }
+
+  // Send tier-appropriate welcome via Resend (silent skip if no API key).
   const emailResult =
     tier === "premium"
-      ? await sendPremiumWelcomeEmail({ to: email, firstName })
-      : await sendCoreWelcomeEmail({ to: email, firstName });
-
-  // Best-effort magic-link so the buyer can log into the dashboard.
-  await admin.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-      shouldCreateUser: false,
-    },
-  });
+      ? await sendPremiumWelcomeEmail({ to: email, firstName, loginUrl })
+      : await sendCoreWelcomeEmail({ to: email, firstName, loginUrl });
 
   // Read what the customer ACTUALLY paid (in cents → whole dollars). This
   // matters when a Core→Premium upgrade applied the $50-off coupon so the
