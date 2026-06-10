@@ -11,9 +11,10 @@ import {
   parseCourseAccess,
   coreTierAccess,
   premiumTierAccess,
+  freeTierAccess,
   type Tier,
 } from "@/lib/access";
-import { notifyNewPaidCustomer, notifyChurn } from "@/lib/webhooks";
+import { notifyNewPaidCustomer, notifyChurn, notifyRefund } from "@/lib/webhooks";
 import { startSeniorsafeTrialIfEligible } from "@/lib/onboard-free-user";
 import { fireServerPurchase } from "@/lib/meta/server-fires";
 
@@ -45,6 +46,49 @@ export async function POST(req: NextRequest) {
     const message = err instanceof Error ? err.message : "Invalid signature";
     return NextResponse.json({ error: message }, { status: 400 });
   }
+
+  const admin = createAdminSupabaseClient();
+
+  // Only these event types have side effects here; ack + ignore everything else.
+  const ACTED_EVENTS = new Set<string>([
+    "customer.subscription.deleted",
+    "checkout.session.completed",
+    "charge.refunded",
+    "charge.dispute.created",
+  ]);
+  if (!ACTED_EVENTS.has(event.type)) {
+    return NextResponse.json({ received: true, ignored: true });
+  }
+
+  // Idempotency (#6): Stripe re-delivers events (retries / manual re-sends).
+  // We CHECK here but only RECORD after the handler succeeds (markProcessed,
+  // called just before each success return). This ordering matters: if we
+  // recorded up front and then a handler hit a transient error, Stripe's retry
+  // would be skipped as a "duplicate" and the purchase lost forever. By
+  // recording only on success, a failed handler stays UNrecorded so the retry
+  // reprocesses it. Under rare CONCURRENT double-delivery both pass this check:
+  // the access write converges (never-downgrade + keep-purchase-date) and the
+  // Meta Purchase fire dedups on a stable event id; the welcome email and the
+  // Ryan SMS are at-least-once (a duplicate is low-harm, not a money/access bug).
+  const { data: already } = await admin
+    .from("stripe_processed_events")
+    .select("event_id")
+    .eq("event_id", event.id)
+    .maybeSingle();
+  if (already) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+  const markProcessed = async () => {
+    const { error: markErr } = await admin
+      .from("stripe_processed_events")
+      .upsert(
+        { event_id: event.id, type: event.type },
+        { onConflict: "event_id", ignoreDuplicates: true }
+      );
+    if (markErr) {
+      console.warn(`[stripe webhook] idempotency mark error: ${markErr.message}`);
+    }
+  };
 
   // Subscription cancellation — fan out to the Kit churn Make scenario.
   // This event fires for the SeniorSafe subscriptions ($14.99/mo,
@@ -96,7 +140,102 @@ export async function POST(req: NextRequest) {
         })
       );
     }
+    await markProcessed();
     return NextResponse.json({ received: true, churn_fanout: !!email });
+  }
+
+  // Refund / chargeback (#5): revoke course access for a fully-refunded or
+  // disputed purchase, and text Ryan. We match the profile whose CURRENT access
+  // was granted by the refunded payment (course_access.stripe_payment_id), so a
+  // refund of a superseded payment never strips access the buyer still earned.
+  if (
+    event.type === "charge.refunded" ||
+    event.type === "charge.dispute.created"
+  ) {
+    const isChargeback = event.type === "charge.dispute.created";
+    let paymentIntentId: string | null = null;
+    let alertEmail: string | null = null;
+    let amountUsd: number | null = null;
+
+    if (isChargeback) {
+      const dispute = event.data.object as Stripe.Dispute;
+      paymentIntentId =
+        typeof dispute.payment_intent === "string"
+          ? dispute.payment_intent
+          : dispute.payment_intent?.id ?? null;
+      amountUsd =
+        typeof dispute.amount === "number" ? Math.round(dispute.amount / 100) : null;
+    } else {
+      const charge = event.data.object as Stripe.Charge;
+      // Only act on FULL refunds; ignore partial refunds.
+      if (!charge.refunded || (charge.amount_refunded ?? 0) < charge.amount) {
+        return NextResponse.json({ received: true, partial_refund_ignored: true });
+      }
+      paymentIntentId =
+        typeof charge.payment_intent === "string"
+          ? charge.payment_intent
+          : charge.payment_intent?.id ?? null;
+      alertEmail = charge.billing_details?.email ?? charge.receipt_email ?? null;
+      amountUsd =
+        typeof charge.amount_refunded === "number"
+          ? Math.round(charge.amount_refunded / 100)
+          : null;
+    }
+
+    let revoked = false;
+    if (paymentIntentId) {
+      const { data: matches } = await admin
+        .from("user_profile")
+        .select("id, user_id, course_access")
+        .filter("course_access->>stripe_payment_id", "eq", paymentIntentId);
+      if (matches && matches.length > 1) {
+        console.warn(
+          `[stripe webhook] payment ${paymentIntentId} matched ${matches.length} profiles`
+        );
+      }
+      for (const match of matches ?? []) {
+        if (!alertEmail) {
+          const { data: userRes } = await admin.auth.admin.getUserById(
+            match.user_id
+          );
+          alertEmail = userRes?.user?.email ?? null;
+        }
+        // A dispute can still be WON and there is no re-grant path, so disputes
+        // are ALERT-ONLY — never revoke. Only a full refund (final, merchant-
+        // initiated) revokes. And only downgrade a profile that is actually paid,
+        // so a stale payment id on a free/comped row can't wipe a hand-granted comp.
+        if (isChargeback) continue;
+        const matchTier = parseCourseAccess(match.course_access).tier;
+        if (matchTier !== "core" && matchTier !== "premium") continue;
+        const { error: revErr } = await admin
+          .from("user_profile")
+          .update({ course_access: freeTierAccess() })
+          .eq("id", match.id);
+        if (revErr) {
+          console.error(
+            `[stripe webhook] refund downgrade failed for ${match.user_id}: ${revErr.message}`
+          );
+        } else {
+          revoked = true;
+        }
+      }
+    }
+
+    after(
+      notifyRefund({
+        email: alertEmail,
+        reason: isChargeback ? "chargeback" : "refund",
+        payment_intent: paymentIntentId,
+        amount_usd: amountUsd,
+        revoked,
+      })
+    );
+    await markProcessed();
+    return NextResponse.json({
+      received: true,
+      kind: isChargeback ? "chargeback" : "refund",
+      revoked,
+    });
   }
 
   if (event.type !== "checkout.session.completed") {
@@ -113,8 +252,6 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-
-  const admin = createAdminSupabaseClient();
 
   // Find-or-create auth user.
   let userId = session.client_reference_id ?? null;
@@ -154,7 +291,19 @@ export async function POST(req: NextRequest) {
     .eq("user_id", userId)
     .maybeSingle();
   const prior = profile ? parseCourseAccess(profile.course_access) : null;
+  const priorTier: Tier = prior?.tier ?? "free";
   const upgradedFrom: Tier | undefined = prior?.tier;
+
+  // Never downgrade (#6): a stale Core event re-delivered after the buyer
+  // upgraded to Premium must not knock them back to Core. (free < core < premium)
+  const TIER_RANK: Record<Tier, number> = { free: 0, core: 1, premium: 2 };
+  if (TIER_RANK[priorTier] > TIER_RANK[tier]) {
+    return NextResponse.json({
+      received: true,
+      skipped: "would_downgrade",
+      kept_tier: priorTier,
+    });
+  }
 
   const stripeCustomerId =
     typeof session.customer === "string"
@@ -165,19 +314,37 @@ export async function POST(req: NextRequest) {
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
 
+  // Preserve the original purchase date when the tier is unchanged so a Stripe
+  // re-send never restarts the Premium 90-day support clock (#6). On a genuine
+  // upgrade (core->premium) keepDate is undefined => a fresh purchase date.
+  // Guard a corrupted/legacy purchased_at: an unparseable date would make
+  // toISOString() throw and 500 the webhook, so fall back to a fresh date.
+  const parsedPurchasedAt =
+    priorTier === tier && prior?.purchased_at
+      ? new Date(prior.purchased_at)
+      : undefined;
+  const keepDate =
+    parsedPurchasedAt && !Number.isNaN(parsedPurchasedAt.getTime())
+      ? parsedPurchasedAt
+      : undefined;
+  const effectiveUpgradedFrom =
+    priorTier === tier ? prior?.upgraded_from : upgradedFrom;
+
   const newAccess =
     tier === "premium"
       ? premiumTierAccess({
           stripe_customer_id: stripeCustomerId,
           stripe_session_id: session.id,
           stripe_payment_id: stripePaymentId,
-          upgraded_from: upgradedFrom,
+          upgraded_from: effectiveUpgradedFrom,
+          now: keepDate,
         })
       : coreTierAccess({
           stripe_customer_id: stripeCustomerId,
           stripe_session_id: session.id,
           stripe_payment_id: stripePaymentId,
-          upgraded_from: upgradedFrom,
+          upgraded_from: effectiveUpgradedFrom,
+          now: keepDate,
         });
 
   if (profile) {
@@ -284,7 +451,7 @@ export async function POST(req: NextRequest) {
       stripe_session_id: session.id,
       stripe_customer_id: stripeCustomerId ?? undefined,
       user_id: userId,
-      upgraded_from: upgradedFrom,
+      upgraded_from: effectiveUpgradedFrom,
     })
   );
 
@@ -306,6 +473,7 @@ export async function POST(req: NextRequest) {
     })
   );
 
+  await markProcessed();
   return NextResponse.json({
     received: true,
     user_id: userId,

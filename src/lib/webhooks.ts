@@ -242,3 +242,28 @@ export function notifyChurn(payload: {
     ),
   ]);
 }
+
+// Refund / chargeback alert to Ryan (auth hardening #5). Fires when a Stripe
+// charge.refunded (full refund) or charge.dispute.created (chargeback) arrives.
+// The webhook revokes the buyer's course access to free first; this just texts
+// a heads-up via the same Twilio path used for purchase alerts.
+export function notifyRefund(payload: {
+  email?: string | null;
+  reason: "refund" | "chargeback";
+  payment_intent?: string | null;
+  amount_usd?: number | null;
+  revoked: boolean;
+}): Promise<unknown[]> {
+  const who = payload.email ?? "unknown buyer";
+  const tail =
+    payload.reason === "chargeback"
+      ? "dispute opened — access left intact; review/contest in Stripe"
+      : payload.revoked
+      ? "course access revoked to free"
+      : "no matching current access found — review manually";
+  const sms =
+    `${payload.reason === "chargeback" ? "CHARGEBACK" : "REFUND"}` +
+    `${payload.amount_usd ? ` $${payload.amount_usd}` : ""}: ${who} — ${tail}` +
+    `${payload.payment_intent ? ` (${payload.payment_intent})` : ""}`;
+  return Promise.all([twilioSendSms(sms, `refund-${payload.reason}`)]);
+}

@@ -21,6 +21,9 @@ interface ServerFireOptions {
   eventSourceUrl?: string;
   /** Internal source label, copied into customData.source */
   source: string;
+  /** Optional STABLE event id. When set, Meta dedups repeat fires of the same
+   *  logical event (e.g. a Stripe re-send). When omitted, a random id is used. */
+  eventId?: string;
   /** Additional customData fields (value/currency/content_name for Purchase, etc.) */
   customData?: Record<string, unknown>;
 }
@@ -34,7 +37,7 @@ async function fireServerEvent(
   try {
     await sendCapiEvent({
       eventName,
-      eventId: generateEventId(),
+      eventId: opts.eventId ?? generateEventId(),
       eventSourceUrl: opts.eventSourceUrl ?? DEFAULT_SOURCE_URL,
       userData: {
         email: opts.email ?? undefined,
@@ -67,8 +70,15 @@ export function fireServerPurchase(
     stripeSessionId?: string;
   },
 ): Promise<void> {
+  // Stable per-purchase event id so Stripe re-sends / concurrent webhook
+  // deliveries dedupe Meta-side (Meta dedups on event_id) instead of
+  // double-counting ad-reported revenue. Falls back to a random id.
+  const eventId =
+    opts.eventId ??
+    (opts.stripeSessionId ? `purchase_${opts.stripeSessionId}` : undefined);
   return fireServerEvent(META_EVENTS.PURCHASE, {
     ...opts,
+    eventId,
     customData: {
       value: opts.valueUsd,
       currency: "USD",
