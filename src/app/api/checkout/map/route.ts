@@ -18,9 +18,10 @@ export async function GET(_req: NextRequest) {
     mode: "payment",
     payment_method_types: ["card"],
     line_items: [{ price: PRICING.map.stripePriceId, quantity: 1 }],
-    // Back to the sales page with a "check your email" state; the real access
-    // arrives by email (token link) so it survives a closed tab.
-    success_url: `${SITE.rssSite}/blueprint-preview?purchased=1`,
+    // Straight into the map: it polls for the webhook-issued access by
+    // session_id and unlocks in place (instant access). The emailed token link
+    // is the backstop for returning later / closed tabs.
+    success_url: `${SITE.rssSite}/blueprint-map?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${SITE.rssSite}/blueprint-preview?canceled=1`,
     allow_promotion_codes: true,
     // tier=map is read by the webhook to route this to blueprint_access
