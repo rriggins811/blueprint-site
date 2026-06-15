@@ -39,6 +39,14 @@ export const PRICING = {
     // test-mode price is ever needed.
     stripePriceId: "price_1TiacqFoeumweL6DQSS4zwxj",
   },
+  // Ascension: a $9.99 Map buyer upgrades to the full Blueprint Core for a
+  // discounted $30 (a dedicated $30 price on the SAME Core product, so the
+  // webhook grants normal Core access). Linked from the map's locked-tool CTA.
+  mapUpgrade: {
+    label: "Blueprint Core (Map upgrade)",
+    priceUsd: 30,
+    stripePriceId: "price_1TibMGFoeumweL6DnXG5OE0f",
+  },
   core: {
     label: "Blueprint Core",
     priceUsd: 47,
