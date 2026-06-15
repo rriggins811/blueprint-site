@@ -404,6 +404,49 @@ Riggins Strategic Solutions
   return send({ to: args.to, subject, html, text });
 }
 
+// Blueprint Map ($9.99 tripwire) access email. Sent by the stripe webhook
+// (tier=map branch) right after purchase. Carries the buyer's PRIVATE,
+// token-gated link to the map on rss-site. Unlike the Core/Premium welcome,
+// there is no Blueprint dashboard account here, so the token link IS the
+// access; the buyer should keep this email to return later.
+export async function sendMapAccessEmail(args: {
+  to: string;
+  firstName?: string | null;
+  /** rss-site map URL with the buyer's access token, e.g.
+   *  https://rigginsstrategicsolutions.com/blueprint-map?token=<uuid> */
+  accessUrl: string;
+}): Promise<SendResult> {
+  const greeting = args.firstName ? `Hi ${args.firstName},` : "Hi,";
+  const subject = "Your Blueprint Map is unlocked";
+  const html = `
+    <p>${greeting}</p>
+    <p>Thank you. You now have full access to the Senior Transition Blueprint Map: all 19 module video lessons, plain-English summaries, and your starter tools.</p>
+    <p style="text-align:center;margin:32px 0;">
+      <a href="${args.accessUrl}" style="background:#B36B3A;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;font-size:16px;">Open your Blueprint Map</a>
+    </p>
+    <p style="font-size:13px;color:#666;">This is your private link, so keep this email or bookmark it to come back anytime. If the button does not work, paste this into your browser:<br><a href="${args.accessUrl}" style="word-break:break-all;color:#B36B3A;">${args.accessUrl}</a></p>
+    <p>Start with Module 0. It lays out the whole path in about 15 minutes. Watch the videos, read the summaries, and when you are ready to actually do it, the full toolkit is one step away inside.</p>
+    <p>If you get stuck, just reply to this email. I read every one.</p>
+    <p>Ryan<br><span style="color:#888;font-size:12px;">Riggins Strategic Solutions</span></p>
+  `;
+  const text = `${greeting}
+
+Thank you. You now have full access to the Senior Transition Blueprint Map: all 19 module video lessons, summaries, and your starter tools.
+
+Open your Blueprint Map:
+${args.accessUrl}
+
+This is your private link, so keep this email or bookmark it to come back anytime.
+
+Start with Module 0. It lays out the whole path in about 15 minutes.
+
+If you get stuck, just reply to this email. I read every one.
+
+Ryan
+Riggins Strategic Solutions`;
+  return send({ to: args.to, subject, html, text });
+}
+
 export async function sendPremiumWelcomeEmail(args: {
   to: string;
   firstName?: string | null;

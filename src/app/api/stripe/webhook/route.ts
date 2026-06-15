@@ -1,11 +1,12 @@
 import { NextResponse, after, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
-import { PRICING } from "@/lib/site";
+import { PRICING, SITE } from "@/lib/site";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import {
   sendCoreWelcomeEmail,
   sendPremiumWelcomeEmail,
+  sendMapAccessEmail,
 } from "@/lib/email/resend";
 import {
   parseCourseAccess,
@@ -245,6 +246,64 @@ export async function POST(req: NextRequest) {
   const session = event.data.object as Stripe.Checkout.Session;
   const email = session.customer_details?.email ?? session.customer_email;
   const tier = session.metadata?.tier as Tier | undefined;
+
+  // Blueprint Map ($9.99 tripwire): a SEPARATE product with its own access
+  // store (public.blueprint_access), NOT a course_access tier. Handle it here,
+  // before the core/premium path, and return. Idempotent on stripe_session_id:
+  // a webhook re-delivery reuses the same token instead of minting a new one.
+  if (session.metadata?.tier === "map") {
+    if (!email) {
+      return NextResponse.json(
+        { error: "Map session missing email" },
+        { status: 400 }
+      );
+    }
+    const { data: existingAccess } = await admin
+      .from("blueprint_access")
+      .select("access_token")
+      .eq("stripe_session_id", session.id)
+      .maybeSingle();
+    let token = existingAccess?.access_token as string | undefined;
+    if (!token) {
+      const { data: inserted, error: insErr } = await admin
+        .from("blueprint_access")
+        .insert({
+          email,
+          tier: "map",
+          stripe_session_id: session.id,
+          source: "blueprint_map_purchase",
+        })
+        .select("access_token")
+        .single();
+      if (insErr || !inserted) {
+        return NextResponse.json(
+          { error: insErr?.message ?? "blueprint_access insert failed" },
+          { status: 500 }
+        );
+      }
+      token = inserted.access_token as string;
+    }
+    const accessUrl = `${SITE.rssSite}/blueprint-map?token=${token}`;
+    const firstName = session.customer_details?.name?.split(" ")[0] ?? null;
+    const emailResult = await sendMapAccessEmail({ to: email, firstName, accessUrl });
+    if (!emailResult.ok) {
+      // Do NOT markProcessed: a non-2xx makes Stripe retry, which re-sends the
+      // email (the access row is already created and reused on the retry).
+      console.error(
+        `[stripe webhook] map access email failed for ${email}: ${emailResult.reason}`
+      );
+      return NextResponse.json(
+        { error: "map access email failed", reason: emailResult.reason },
+        { status: 500 }
+      );
+    }
+    await markProcessed();
+    return NextResponse.json({
+      received: true,
+      kind: "blueprint_map",
+      emailed: emailResult.id,
+    });
+  }
 
   if (!email || (tier !== "core" && tier !== "premium")) {
     return NextResponse.json(

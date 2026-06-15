@@ -30,6 +30,15 @@ export function premiumExpiresFromGrant(grant: unknown): Date | null {
 }
 
 export const PRICING = {
+  map: {
+    label: "Blueprint Map",
+    priceUsd: 9.99,
+    // Live one-time price (prod_Ui0eEG839ipSlF), created 2026-06-15. Stripe
+    // price ids are NOT secrets (they ride along in client-side checkout), so
+    // this is hardcoded to skip an extra env var. Move to env if a separate
+    // test-mode price is ever needed.
+    stripePriceId: "price_1TiacqFoeumweL6DQSS4zwxj",
+  },
   core: {
     label: "Blueprint Core",
     priceUsd: 47,
