@@ -41,42 +41,84 @@ export default async function DashboardHome() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-10">
-      <header className="mb-10">
+      <header className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight">
           {firstName ? `Welcome, ${firstName}.` : "Welcome."}
         </h1>
         <p className="mt-2 text-neutral-600">
           {isPaid(access)
             ? "Start at Module 00. Or jump to wherever your family is right now. Self-paced. Lifetime access."
-            : "Module 00 is yours. The rest unlock with Blueprint Core for $47, lifetime access."}
+            : "Module 00 is yours. Start with the Blueprint Map below to see every step in order, then unlock the full toolkit when you are ready."}
         </p>
       </header>
 
-      {/* Blueprint Map tile — only for $9.99 map buyers. Their paid product:
-          the interactive mind map on rss-site, opened with their private token. */}
+      {/* HERO 1 of 2 (mutually exclusive by gating): the $9.99 Map is the
+          first thing a free user without the map sees. It is the
+          anti-overwhelm shortcut, framed as a different KIND of thing than
+          the free guides (the pieces) or Core (the tools). */}
+      {isFreeTier && !mapToken ? (
+        <section
+          className="mb-6 rounded-xl border-2 p-6 sm:p-8"
+          style={{ borderColor: "#1F3A5F", backgroundColor: "#1F3A5F" }}
+        >
+          <p
+            className="text-xs font-semibold uppercase tracking-[0.18em]"
+            style={{ color: "#D4AF37" }}
+          >
+            Start here
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            The Blueprint Map. Every step, in order.
+          </h2>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-white/85">
+            Not another stack of PDFs to dig through. The Map lays out every
+            step of the transition on one screen, each with a short video that
+            explains it in plain English. The calm shortcut when it all feels
+            like too much.
+          </p>
+          <p className="mt-3 text-base text-white/90">
+            The same video lessons and summaries from the $47 course, for{" "}
+            <span className="font-semibold" style={{ color: "#D4AF37" }}>
+              $9.99
+            </span>
+            .
+          </p>
+          <a
+            href="https://rigginsstrategicsolutions.com/blueprint-preview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-center justify-center rounded-md px-6 py-3 text-sm font-bold hover:opacity-90"
+            style={{ backgroundColor: "#D4AF37", color: "#1F3A5F" }}
+          >
+            Get the Map for $9.99
+          </a>
+        </section>
+      ) : null}
+
+      {/* HERO 2 of 2: map buyers ($9.99) see their map at the top instead. */}
       {mapToken ? (
         <section
-          className="mb-6 rounded-lg border-2 p-5"
+          className="mb-6 rounded-xl border-2 p-6 sm:p-8"
           style={{ borderColor: "#1F3A5F", backgroundColor: "#1F3A5F" }}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p
-                className="text-sm font-medium uppercase tracking-wide"
+                className="text-xs font-semibold uppercase tracking-[0.18em]"
                 style={{ color: "#D4AF37" }}
               >
                 Your Blueprint Map
               </p>
-              <p className="mt-1 text-base text-white/90">
-                The interactive mind map: all 19 module video lessons and
-                summaries. Click any module to watch and read.
+              <p className="mt-2 max-w-xl text-base leading-relaxed text-white/90">
+                Every step in order, on one screen. All 19 module video lessons
+                and summaries. Click any module to watch and read.
               </p>
             </div>
             <a
               href={`https://rigginsstrategicsolutions.com/blueprint-map?token=${mapToken}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold hover:opacity-90"
+              className="inline-flex shrink-0 items-center justify-center rounded-md px-5 py-3 text-sm font-bold hover:opacity-90"
               style={{ backgroundColor: "#D4AF37", color: "#1F3A5F" }}
             >
               Open the Map
@@ -85,13 +127,9 @@ export default async function DashboardHome() {
         </section>
       ) : null}
 
-      {/* Simple Blueprint PDF — moved out of the welcome email per the
-          May 15 funnel-fix decision. Recipients were clicking the email
-          PDF link and bouncing without activating; now the PDF lives
-          here, post-activation. URL source-of-truth is the same env var
-          the email used to read (FREEGUIDE_PDF_URL); fallback to the
-          known production path if unset so a missing-env-var build
-          doesn't hide the button entirely. */}
+      {/* Simple Blueprint PDF — the free starter map, post-activation. URL
+          source-of-truth is FREEGUIDE_PDF_URL; fallback to the known prod
+          path so a missing-env build doesn't hide the button. */}
       <section className="mb-6 rounded-lg border border-neutral-200 bg-amber-50/40 p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -99,8 +137,8 @@ export default async function DashboardHome() {
               Your starter guide
             </p>
             <p className="mt-1 text-base text-neutral-800">
-              The Simple Blueprint PDF — a 14-page, plain-English starter
-              guide. Save it for later or print it out for the family.
+              The Simple Blueprint PDF, a 14-page, plain-English starter guide.
+              Save it for later or print it out for the family.
             </p>
           </div>
           <a
@@ -115,102 +153,6 @@ export default async function DashboardHome() {
             Download Simple Blueprint (PDF)
           </a>
         </div>
-      </section>
-
-      {/* My Guides — combined dashboard tile listing every published lead
-          magnet (3 as of May 18: Cash Buyer Beware + When Mom Falls
-          Crisis Playbook + Aging in Place vs Assisted Living). Replaces
-          the single-magnet Cash Buyer Beware tile so each new magnet
-          appears here without growing the dashboard hero vertically.
-          Cream background (#FCF8EE) + navy button (#1F3A5F) per the
-          original Protection Guide spec, applied via inline style since
-          blueprint-site Tailwind theme uses only standard tokens (no
-          navy/cream custom colors like rss-site).
-
-          Available to ALL signed-in users — no premium gating. PDFs
-          hosted canonically on rigginsstrategicsolutions.com per the
-          lead-magnet single-source-of-truth convention. GA4 + tracking
-          attribute fires `download_lead_magnet` with magnet + source so
-          dashboard-tile downloads can be attributed separately from the
-          public /guides email-gate flow.
-
-          Inline registry duplicates the rss-site LEAD_MAGNETS list
-          (cross-repo dependency would be heavier than just keeping a
-          short array in sync). Add new magnets here when adding to
-          rss-site/src/lib/lead-magnets.ts. */}
-      <section
-        className="mb-10 rounded-lg border border-neutral-200 p-5"
-        style={{ backgroundColor: "#FCF8EE" }}
-      >
-        <p
-          className="text-sm font-medium uppercase tracking-wide"
-          style={{ color: "#1F3A5F" }}
-        >
-          Your guides
-        </p>
-        <p className="mt-1 text-base text-neutral-700">
-          The free protection + decision guides you have access to. Save
-          them for later or print them out for the family.
-        </p>
-        <ul className="mt-4 divide-y divide-neutral-200">
-          {[
-            {
-              slug: "cash-buyer-beware",
-              title: "Cash Buyer Beware",
-              subtitle:
-                "The 15-page wholesaler protection guide — what to know before Mom signs anything.",
-              pdfUrl:
-                "https://rigginsstrategicsolutions.com/downloads/cash-buyer-beware.pdf",
-            },
-            {
-              slug: "when-mom-falls-crisis-playbook",
-              title: "When Mom Falls at 2 AM",
-              subtitle:
-                "The 17-page crisis playbook — the first 30 minutes and the 30 mistakes most families make.",
-              pdfUrl:
-                "https://rigginsstrategicsolutions.com/downloads/when-mom-falls-crisis-playbook.pdf",
-            },
-            {
-              slug: "aging-in-place-vs-assisted-living",
-              title: "Aging in Place vs Assisted Living",
-              subtitle:
-                "The 17-page decision guide — real 5-year cost math and the 5 questions that actually decide.",
-              pdfUrl:
-                "https://rigginsstrategicsolutions.com/downloads/aging-in-place-vs-assisted-living.pdf",
-            },
-            {
-              slug: "medicare-coverage-gaps",
-              title: "Medicare Coverage Gaps Most Families Don't Know About",
-              subtitle:
-                "The 17-page coverage guide — the hospital and rehab questions that cost families $10K to $30K.",
-              pdfUrl:
-                "https://rigginsstrategicsolutions.com/downloads/medicare-coverage-gaps.pdf",
-            },
-          ].map((m) => (
-            <li
-              key={m.slug}
-              className="flex flex-col gap-3 py-4 first:pt-3 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0">
-                <p className="text-base font-semibold text-neutral-900">
-                  {m.title}
-                </p>
-                <p className="mt-0.5 text-sm text-neutral-700">{m.subtitle}</p>
-              </div>
-              <a
-                href={m.pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-track="download_lead_magnet"
-                data-track-params={`{"magnet":"${m.slug}","source":"blueprint_dashboard"}`}
-                className="inline-flex shrink-0 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                style={{ backgroundColor: "#1F3A5F" }}
-              >
-                Download PDF
-              </a>
-            </li>
-          ))}
-        </ul>
       </section>
 
       <section>
@@ -264,50 +206,111 @@ export default async function DashboardHome() {
         </ul>
       </section>
 
-      {/* $9.99 Map bridge offer — only for free users who don't already own
-          the map. The low-friction first rung before the $47 Core. */}
-      {isFreeTier && !mapToken ? (
-        <section
-          className="mt-14 rounded-lg border-2 p-7 text-center"
-          style={{ borderColor: "#1F3A5F", backgroundColor: "#FCF8EE" }}
-        >
-          <p
-            className="text-sm font-medium uppercase tracking-wider"
-            style={{ color: "#1F3A5F" }}
-          >
-            See the whole system first
-          </p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-            The Blueprint Map. $9.99.
-          </h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-neutral-700">
-            Watch all 19 modules explained, short video lessons and
-            plain-English summaries, before you decide on the full Blueprint.
-            Less than a sandwich.
-          </p>
-          <a
-            href="https://rigginsstrategicsolutions.com/blueprint-preview"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium text-white hover:opacity-90"
-            style={{ backgroundColor: "#1F3A5F" }}
-          >
-            Get the Map for $9.99
-          </a>
-        </section>
-      ) : null}
+      {/* Your Library — the free guides, demoted to a quiet collapsible
+          section so they stop competing with the Map for attention. Framed
+          as "the pieces": individual guides for specific moments. The PDFs
+          and download tracking are unchanged. */}
+      <section className="mt-12">
+        <details className="group rounded-lg border border-neutral-200 bg-neutral-50/60 p-5">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+            <span>
+              <span className="text-base font-semibold text-neutral-900">
+                Your Library
+              </span>
+              <span className="mt-0.5 block text-sm text-neutral-600">
+                The free guides you have access to. Individual pieces for
+                specific moments. The Map above puts them in order.
+              </span>
+            </span>
+            <span
+              className="shrink-0 text-sm font-medium text-neutral-500 group-open:hidden"
+              aria-hidden
+            >
+              Show
+            </span>
+            <span
+              className="hidden shrink-0 text-sm font-medium text-neutral-500 group-open:inline"
+              aria-hidden
+            >
+              Hide
+            </span>
+          </summary>
+          <ul className="mt-4 divide-y divide-neutral-200 border-t border-neutral-200">
+            {[
+              {
+                slug: "cash-buyer-beware",
+                title: "Cash Buyer Beware",
+                subtitle:
+                  "The 15-page wholesaler protection guide. What to know before Mom signs anything.",
+                pdfUrl:
+                  "https://rigginsstrategicsolutions.com/downloads/cash-buyer-beware.pdf",
+              },
+              {
+                slug: "when-mom-falls-crisis-playbook",
+                title: "When Mom Falls at 2 AM",
+                subtitle:
+                  "The 17-page crisis playbook. The first 30 minutes and the 30 mistakes most families make.",
+                pdfUrl:
+                  "https://rigginsstrategicsolutions.com/downloads/when-mom-falls-crisis-playbook.pdf",
+              },
+              {
+                slug: "aging-in-place-vs-assisted-living",
+                title: "Aging in Place vs Assisted Living",
+                subtitle:
+                  "The 17-page decision guide. Real 5-year cost math and the 5 questions that actually decide.",
+                pdfUrl:
+                  "https://rigginsstrategicsolutions.com/downloads/aging-in-place-vs-assisted-living.pdf",
+              },
+              {
+                slug: "medicare-coverage-gaps",
+                title: "Medicare Coverage Gaps Most Families Don't Know About",
+                subtitle:
+                  "The 17-page coverage guide. The hospital and rehab questions that cost families $10K to $30K.",
+                pdfUrl:
+                  "https://rigginsstrategicsolutions.com/downloads/medicare-coverage-gaps.pdf",
+              },
+            ].map((m) => (
+              <li
+                key={m.slug}
+                className="flex flex-col gap-3 py-4 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="text-base font-semibold text-neutral-900">
+                    {m.title}
+                  </p>
+                  <p className="mt-0.5 text-sm text-neutral-700">{m.subtitle}</p>
+                </div>
+                <a
+                  href={m.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-track="download_lead_magnet"
+                  data-track-params={`{"magnet":"${m.slug}","source":"blueprint_dashboard"}`}
+                  className="inline-flex shrink-0 items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 hover:bg-neutral-50"
+                >
+                  Download PDF
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      </section>
 
+      {/* Core upsell — the execution tier. Framed against the Map: the Map
+          shows the steps, Core gives the tools to do each one. */}
       {isFreeTier ? (
-        <section className="mt-14 rounded-lg border-2 border-amber-600 bg-amber-50 p-7 text-center">
+        <section className="mt-12 rounded-lg border-2 border-amber-600 bg-amber-50 p-7 text-center">
           <p className="text-sm font-medium uppercase tracking-wider text-amber-800">
-            Unlock everything
+            When you are ready to do the work
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-            21 modules. 71 tools. $47, one time.
+            Blueprint Core. All 21 modules, all 71 tools. $47 once.
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-neutral-700">
-            Blueprint Core is the complete system. Lifetime access. No
-            recurring charge. Premium adds a 60-minute call with Ryan.
+            The Map shows you every step. Core gives you the tools to actually
+            do each one: the scripts, checklists, and calculators. Lifetime
+            access, no recurring charge. Premium adds a 60-minute call with
+            Ryan.
           </p>
           <Link
             href="/pricing"
