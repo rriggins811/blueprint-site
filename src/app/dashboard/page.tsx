@@ -70,7 +70,17 @@ export default async function DashboardHome() {
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
             The Blueprint Map. Every step, in order.
           </h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-white/85">
+          <figure className="mt-5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/blueprint-map-graphic.png"
+              alt="The Blueprint Map: the central plan and its 8 main branches, every step in order on one screen."
+              width={1060}
+              height={648}
+              className="h-auto w-full max-w-2xl rounded-lg border border-white/15 shadow-md"
+            />
+          </figure>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/85">
             Not another stack of PDFs to dig through. The Map lays out every
             step of the transition on one screen, each with a short video that
             explains it in plain English. The calm shortcut when it all feels
