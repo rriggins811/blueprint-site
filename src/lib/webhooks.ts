@@ -212,6 +212,31 @@ export function notifyNewPaidCustomer(payload: {
   ]);
 }
 
+// Blueprint Map ($9.99) purchase. The buyer also enters the free-tier nurture
+// via applyFreeTierSetup -> notifyFreeSignup; this adds the map-buyer product
+// tag so the nurture can branch (sell the $30/$47 upgrade instead of re-pushing
+// the free guide) and texts Ryan.
+export function notifyMapPurchase(payload: {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}): Promise<unknown[]> {
+  const sms = `PAID map $9.99: ${nameFor(payload)} (${payload.email})`;
+  return Promise.all([
+    ghlProxyUpsertAndTag(
+      {
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+      },
+      GHL_TAGS.PRODUCT_BLUEPRINT_MAP,
+      "blueprint_map_purchase",
+      "paid-map"
+    ),
+    twilioSendSms(sms, "new-paid-map"),
+  ]);
+}
+
 // Subscription cancellation → applies seniorsafe-churned GHL tag.
 // Today this fires only for SeniorSafe subscription cancellations (Blueprint
 // Core/Premium are one-time purchases). Senior-safe stripe-webhook ALSO

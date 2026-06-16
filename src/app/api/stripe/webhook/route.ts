@@ -15,8 +15,16 @@ import {
   freeTierAccess,
   type Tier,
 } from "@/lib/access";
-import { notifyNewPaidCustomer, notifyChurn, notifyRefund } from "@/lib/webhooks";
-import { startSeniorsafeTrialIfEligible } from "@/lib/onboard-free-user";
+import {
+  notifyNewPaidCustomer,
+  notifyChurn,
+  notifyRefund,
+  notifyMapPurchase,
+} from "@/lib/webhooks";
+import {
+  startSeniorsafeTrialIfEligible,
+  applyFreeTierSetup,
+} from "@/lib/onboard-free-user";
 import { fireServerPurchase } from "@/lib/meta/server-fires";
 
 export const runtime = "nodejs";
@@ -247,10 +255,12 @@ export async function POST(req: NextRequest) {
   const email = session.customer_details?.email ?? session.customer_email;
   const tier = session.metadata?.tier as Tier | undefined;
 
-  // Blueprint Map ($9.99 tripwire): a SEPARATE product with its own access
-  // store (public.blueprint_access), NOT a course_access tier. Handle it here,
-  // before the core/premium path, and return. Idempotent on stripe_session_id:
-  // a webhook re-delivery reuses the same token instead of minting a new one.
+  // Blueprint Map ($9.99): its own access store (public.blueprint_access) for
+  // the token-gated map, PLUS a real free-tier Blueprint ACCOUNT so the buyer
+  // lands in our ecosystem (dashboard, locked modules, free guides, SeniorSafe
+  // trial, nurture) instead of a dead-end token link. Handled before the
+  // core/premium path. Idempotent on stripe_session_id; account onboarding is
+  // idempotent (never downgrades a paid tier).
   if (session.metadata?.tier === "map") {
     if (!email) {
       return NextResponse.json(
@@ -258,6 +268,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // 1. Map access token (idempotent on session id).
     const { data: existingAccess } = await admin
       .from("blueprint_access")
       .select("access_token")
@@ -283,12 +295,84 @@ export async function POST(req: NextRequest) {
       }
       token = inserted.access_token as string;
     }
+
+    // 2. Find-or-create the Blueprint account so they get a login + dashboard.
+    const mapName = session.customer_details?.name ?? null;
+    const mapFirstName = mapName?.split(" ")[0] ?? undefined;
+    const mapLastName =
+      mapName && mapName.split(" ").length > 1
+        ? mapName.split(" ").slice(1).join(" ")
+        : undefined;
+    let mapUserId = session.client_reference_id ?? null;
+    if (!mapUserId) {
+      const { data: list, error: listErr } = await admin.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+      });
+      if (listErr) {
+        return NextResponse.json({ error: listErr.message }, { status: 500 });
+      }
+      const existing = list.users.find(
+        (u) => u.email?.toLowerCase() === email.toLowerCase()
+      );
+      if (existing) {
+        mapUserId = existing.id;
+      } else {
+        const { data: created, error: createErr } =
+          await admin.auth.admin.createUser({ email, email_confirm: true });
+        if (createErr || !created?.user) {
+          return NextResponse.json(
+            { error: createErr?.message ?? "Failed to create user" },
+            { status: 500 }
+          );
+        }
+        mapUserId = created.user.id;
+      }
+    }
+
+    // 3. Free-tier onboarding: course_access (Module 0 + free tools), family
+    // code, SeniorSafe trial, the Free-Guide nurture, and a leads row. Never
+    // downgrades a user who is already Core/Premium.
+    const onboard = await applyFreeTierSetup({
+      userId: mapUserId,
+      email,
+      firstName: mapFirstName,
+      lastName: mapLastName,
+      source: "blueprint_map_purchase",
+    });
+    after(onboard.fanout);
+
+    // 4. Map-buyer GHL tag (branches nurture toward the $30/$47 upgrade) + Ryan SMS.
+    after(notifyMapPurchase({ email, firstName: mapFirstName, lastName: mapLastName }));
+
+    // 5. One-click magic login for the welcome email (lands on /dashboard).
+    let loginUrl: string | undefined;
+    try {
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+      });
+      const hashedToken = linkData?.properties?.hashed_token;
+      if (hashedToken) {
+        loginUrl =
+          `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` +
+          `?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink&next=/dashboard`;
+      }
+    } catch {
+      /* falls back to a plain /dashboard link in the email */
+    }
+
+    // 6. Welcome email: lead with the dashboard, token map link at the bottom.
     const accessUrl = `${SITE.rssSite}/blueprint-map?token=${token}`;
-    const firstName = session.customer_details?.name?.split(" ")[0] ?? null;
-    const emailResult = await sendMapAccessEmail({ to: email, firstName, accessUrl });
+    const emailResult = await sendMapAccessEmail({
+      to: email,
+      firstName: mapFirstName,
+      loginUrl,
+      accessUrl,
+    });
     if (!emailResult.ok) {
-      // Do NOT markProcessed: a non-2xx makes Stripe retry, which re-sends the
-      // email (the access row is already created and reused on the retry).
+      // Do NOT markProcessed: a non-2xx makes Stripe retry, which re-runs this
+      // (all steps above are idempotent) and re-sends the email.
       console.error(
         `[stripe webhook] map access email failed for ${email}: ${emailResult.reason}`
       );
@@ -301,6 +385,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       received: true,
       kind: "blueprint_map",
+      user_id: mapUserId,
       emailed: emailResult.id,
     });
   }

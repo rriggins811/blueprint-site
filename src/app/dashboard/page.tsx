@@ -26,6 +26,11 @@ export default async function DashboardHome() {
 
   const access = parseCourseAccess(profile?.course_access);
   const firstName = profile?.first_name ?? null;
+
+  // Map buyers ($9.99) get a private token to the interactive mind map on
+  // rss-site. RPC is keyed on the caller's own email, so it returns only theirs.
+  const { data: mapTokenRaw } = await supabase.rpc("my_blueprint_map_access");
+  const mapToken = typeof mapTokenRaw === "string" ? mapTokenRaw : null;
   const hasPremium = access.tier === "premium";
   const isFreeTier = access.tier === "free";
 
@@ -46,6 +51,39 @@ export default async function DashboardHome() {
             : "Module 00 is yours. The rest unlock with Blueprint Core for $47, lifetime access."}
         </p>
       </header>
+
+      {/* Blueprint Map tile — only for $9.99 map buyers. Their paid product:
+          the interactive mind map on rss-site, opened with their private token. */}
+      {mapToken ? (
+        <section
+          className="mb-6 rounded-lg border-2 p-5"
+          style={{ borderColor: "#1F3A5F", backgroundColor: "#1F3A5F" }}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p
+                className="text-sm font-medium uppercase tracking-wide"
+                style={{ color: "#D4AF37" }}
+              >
+                Your Blueprint Map
+              </p>
+              <p className="mt-1 text-base text-white/90">
+                The interactive mind map: all 19 module video lessons and
+                summaries. Click any module to watch and read.
+              </p>
+            </div>
+            <a
+              href={`https://rigginsstrategicsolutions.com/blueprint-map?token=${mapToken}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold hover:opacity-90"
+              style={{ backgroundColor: "#D4AF37", color: "#1F3A5F" }}
+            >
+              Open the Map
+            </a>
+          </div>
+        </section>
+      ) : null}
 
       {/* Simple Blueprint PDF — moved out of the welcome email per the
           May 15 funnel-fix decision. Recipients were clicking the email

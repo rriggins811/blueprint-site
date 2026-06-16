@@ -404,46 +404,68 @@ Riggins Strategic Solutions
   return send({ to: args.to, subject, html, text });
 }
 
-// Blueprint Map ($9.99 tripwire) access email. Sent by the stripe webhook
-// (tier=map branch) right after purchase. Carries the buyer's PRIVATE,
-// token-gated link to the map on rss-site. Unlike the Core/Premium welcome,
-// there is no Blueprint dashboard account here, so the token link IS the
-// access; the buyer should keep this email to return later.
+// Blueprint Map ($9.99) welcome email. Sent by the stripe webhook (tier=map
+// branch) right after purchase. The map buyer now gets a real Blueprint account,
+// so this LEADS with the dashboard (one-click magic login) where their map, the
+// locked modules, the free guides, and the SeniorSafe trial all live, and keeps
+// the direct token map link at the BOTTOM as a no-login fallback.
 export async function sendMapAccessEmail(args: {
   to: string;
   firstName?: string | null;
-  /** rss-site map URL with the buyer's access token, e.g.
-   *  https://rigginsstrategicsolutions.com/blueprint-map?token=<uuid> */
+  /** One-click magic-login to the Blueprint dashboard (primary CTA). */
+  loginUrl?: string;
+  /** Direct token link to the mindmap (secondary, at the bottom). */
   accessUrl: string;
 }): Promise<SendResult> {
   const greeting = args.firstName ? `Hi ${args.firstName},` : "Hi,";
   const subject = "Your Blueprint Map is unlocked";
+  const dashboardUrl = `${SITE.url}/dashboard`;
+  const ctaUrl = args.loginUrl ?? dashboardUrl;
+  const fallbackHtml = args.loginUrl
+    ? `<p style="font-size:13px;color:#666;">That button logs you in automatically and expires after a while. You can always sign in later at <a href="${dashboardUrl}">${dashboardUrl}</a>.</p>`
+    : "";
   const html = `
     <p>${greeting}</p>
-    <p>Thank you. You now have full access to the Senior Transition Blueprint Map: all 19 module video lessons, plain-English summaries, and your starter tools.</p>
-    <p style="text-align:center;margin:32px 0;">
-      <a href="${args.accessUrl}" style="background:#B36B3A;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;font-size:16px;">Open your Blueprint Map</a>
+    <p>Thank you. Your Blueprint Map is unlocked, and I set up a free account for you so everything lives in one place.</p>
+    <p style="text-align:center;margin:28px 0;">
+      <a href="${ctaUrl}" style="background:#1F3A5F;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;font-size:16px;">Open your dashboard</a>
     </p>
-    <p style="font-size:13px;color:#666;">This is your private link, so keep this email or bookmark it to come back anytime. If the button does not work, paste this into your browser:<br><a href="${args.accessUrl}" style="word-break:break-all;color:#B36B3A;">${args.accessUrl}</a></p>
-    <p>Start with Module 0. It lays out the whole path in about 15 minutes. Watch the videos, read the summaries, and when you are ready to actually do it, the full toolkit is one step away inside.</p>
+    ${fallbackHtml}
+    <p>Inside your dashboard you will find:</p>
+    <ul>
+      <li><strong>Your interactive Blueprint Map</strong>, all 19 module video lessons and plain-English summaries.</li>
+      <li><strong>Module 0 unlocked</strong>, with the rest of the modules ready to unlock with the full Blueprint.</li>
+      <li><strong>Your free protection guides</strong>, the Simple Blueprint plus the family decision guides.</li>
+      <li><strong>A 14-day SeniorSafe trial</strong>, the family-coordination app with Maggie.</li>
+    </ul>
+    <p>Start with Module 0. It lays out the whole path in about 15 minutes.</p>
     <p>If you get stuck, just reply to this email. I read every one.</p>
     <p>Ryan<br><span style="color:#888;font-size:12px;">Riggins Strategic Solutions</span></p>
+    <hr style="border:none;border-top:1px solid #e5e5e5;margin:28px 0;" />
+    <p style="font-size:12px;color:#888;">Prefer to jump straight to the map without logging in? Use your private link: <a href="${args.accessUrl}" style="word-break:break-all;color:#1F3A5F;">${args.accessUrl}</a></p>
   `;
+  const fallbackText = args.loginUrl
+    ? `\n(That link logs you in automatically and expires after a while. You can always sign in later at ${dashboardUrl})\n`
+    : "";
   const text = `${greeting}
 
-Thank you. You now have full access to the Senior Transition Blueprint Map: all 19 module video lessons, summaries, and your starter tools.
+Thank you. Your Blueprint Map is unlocked, and I set up a free account for you so everything lives in one place.
 
-Open your Blueprint Map:
-${args.accessUrl}
-
-This is your private link, so keep this email or bookmark it to come back anytime.
+Open your dashboard:
+${ctaUrl}
+${fallbackText}
+Inside you will find your interactive Blueprint Map (19 video lessons and summaries), Module 0 unlocked, your free protection guides, and a 14-day SeniorSafe trial.
 
 Start with Module 0. It lays out the whole path in about 15 minutes.
 
 If you get stuck, just reply to this email. I read every one.
 
 Ryan
-Riggins Strategic Solutions`;
+Riggins Strategic Solutions
+
+---
+Prefer to jump straight to the map without logging in? Your private link:
+${args.accessUrl}`;
   return send({ to: args.to, subject, html, text });
 }
 

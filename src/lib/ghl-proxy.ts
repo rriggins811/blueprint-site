@@ -151,6 +151,7 @@ export const GHL_TAGS = {
   // Blueprint product tags (defined in SOP as "future" — OK to use now)
   PRODUCT_BLUEPRINT_CORE: "product-blueprint-core",
   PRODUCT_BLUEPRINT_PREMIUM: "product-blueprint-premium",
+  PRODUCT_BLUEPRINT_MAP: "product-blueprint-map",
 } as const;
 
 export type GhlContactInput = {

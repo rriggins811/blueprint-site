@@ -32,3 +32,35 @@ $$;
 
 revoke all on function public.blueprint_access_tier(uuid) from public;
 grant execute on function public.blueprint_access_tier(uuid) to anon, authenticated;
+
+-- Instant access on the success page: resolve a just-completed Stripe session to
+-- its tier (the success page polls this by session_id while the webhook lands).
+create or replace function public.blueprint_access_tier_by_session(p_session_id text)
+returns text
+language sql
+security definer
+set search_path = public
+as $$
+  select tier from public.blueprint_access where stripe_session_id = p_session_id limit 1;
+$$;
+
+revoke all on function public.blueprint_access_tier_by_session(text) from public;
+grant execute on function public.blueprint_access_tier_by_session(text) to anon, authenticated;
+
+-- Dashboard tile: returns the logged-in user's OWN map token (keyed on
+-- auth.email(), so a user can never read another buyer's token).
+create or replace function public.my_blueprint_map_access()
+returns text
+language sql
+security definer
+set search_path = public
+as $$
+  select access_token::text
+  from public.blueprint_access
+  where email = auth.email()
+  order by created_at desc
+  limit 1;
+$$;
+
+revoke all on function public.my_blueprint_map_access() from public;
+grant execute on function public.my_blueprint_map_access() to authenticated;
