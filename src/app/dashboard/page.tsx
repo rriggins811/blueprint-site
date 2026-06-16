@@ -264,6 +264,39 @@ export default async function DashboardHome() {
         </ul>
       </section>
 
+      {/* $9.99 Map bridge offer — only for free users who don't already own
+          the map. The low-friction first rung before the $47 Core. */}
+      {isFreeTier && !mapToken ? (
+        <section
+          className="mt-14 rounded-lg border-2 p-7 text-center"
+          style={{ borderColor: "#1F3A5F", backgroundColor: "#FCF8EE" }}
+        >
+          <p
+            className="text-sm font-medium uppercase tracking-wider"
+            style={{ color: "#1F3A5F" }}
+          >
+            See the whole system first
+          </p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight">
+            The Blueprint Map. $9.99.
+          </h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-neutral-700">
+            Watch all 19 modules explained, short video lessons and
+            plain-English summaries, before you decide on the full Blueprint.
+            Less than a sandwich.
+          </p>
+          <a
+            href="https://rigginsstrategicsolutions.com/blueprint-preview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-center justify-center rounded-md px-5 py-3 text-sm font-medium text-white hover:opacity-90"
+            style={{ backgroundColor: "#1F3A5F" }}
+          >
+            Get the Map for $9.99
+          </a>
+        </section>
+      ) : null}
+
       {isFreeTier ? (
         <section className="mt-14 rounded-lg border-2 border-amber-600 bg-amber-50 p-7 text-center">
           <p className="text-sm font-medium uppercase tracking-wider text-amber-800">
