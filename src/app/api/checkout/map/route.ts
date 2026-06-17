@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { PRICING, SITE } from "@/lib/site";
 
 export const runtime = "nodejs";
@@ -14,6 +14,7 @@ export const runtime = "nodejs";
 // emails the buyer their private map link. A GET so the sales-page button can
 // be a plain link.
 export async function GET(_req: NextRequest) {
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],

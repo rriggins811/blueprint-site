@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { PRICING, SITE } from "@/lib/site";
 
 export const runtime = "nodejs";
@@ -12,6 +12,7 @@ export const runtime = "nodejs";
 // course access (the only difference is the amount paid). Linked from the map's
 // locked-tool CTA. A GET so it can be a plain link.
 export async function GET(_req: NextRequest) {
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],

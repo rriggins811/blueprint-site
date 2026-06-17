@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import type Stripe from "stripe";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { PRICING, SITE } from "@/lib/site";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { parseCourseAccess } from "@/lib/access";
@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
     sessionParams.allow_promotion_codes = true;
   }
 
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create(sessionParams);
 
   if (!session.url) {
