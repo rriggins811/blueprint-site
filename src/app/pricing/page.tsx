@@ -41,6 +41,14 @@ export default async function PricingPage() {
           Same 21 modules. Same 71 tools. Same lifetime access. The only
           question is whether you want Ryan in the room with you for an hour.
         </p>
+        <p>
+          <Link
+            href="/roadmap"
+            className="text-sm font-medium text-amber-700 underline underline-offset-4 hover:text-amber-800"
+          >
+            See the whole Senior Transition Roadmap, start to finish &rarr;
+          </Link>
+        </p>
       </header>
 
       <section className="grid gap-6 md:grid-cols-2">

@@ -10,6 +10,17 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* RSS brand palette (Senior Transition Roadmap). Navy / gold / burgundy on a
+     warm cream canvas, mirroring the premium care-roadmap feel. */
+  --color-navy: #1b2a4e;
+  --color-navy-800: #142039;
+  --color-gold: #c9a961;
+  --color-gold-700: #a9863f;
+  --color-burgundy: #6b1f2e;
+  --color-cream: #f7f4ec;
+  --color-cream-200: #efe9da;
+  --color-ink: #20242e;
 }
 
 body {
