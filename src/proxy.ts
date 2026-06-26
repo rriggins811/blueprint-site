@@ -5,11 +5,22 @@ import { NextResponse, type NextRequest } from "next/server";
 // Required for Server Components to read the current user reliably.
 // Next 16 renamed this convention from "middleware" to "proxy".
 export async function proxy(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If Supabase isn't configured in this environment (e.g. a preview
+  // deployment that wasn't handed the keys), step aside instead of crashing
+  // every route. Production always has these set, so this guard never
+  // changes behavior there.
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
