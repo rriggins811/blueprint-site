@@ -505,6 +505,11 @@ export default function RoadmapPage() {
               Already purchased? Log in
             </Link>
           </div>
+
+          <p className="mt-6 max-w-2xl text-sm leading-relaxed text-cream/70">
+            <span className="font-semibold text-gold">14-day money-back guarantee.</span> Refundable right up
+            until your call happens. If Premium is not the right fit for your family, you get every dollar back.
+          </p>
         </div>
       </section>
 
