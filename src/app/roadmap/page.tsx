@@ -443,6 +443,71 @@ export default function RoadmapPage() {
         </div>
       </section>
 
+      {/* A LOOK INSIDE — the real deliverables */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-5xl px-6 py-16">
+          <h2 className={`${display} text-3xl text-navy sm:text-4xl`}>See exactly what you get</h2>
+          <p className="mt-3 max-w-3xl leading-relaxed text-ink/80">
+            No mystery. Here are the two documents at the heart of Premium: the written plan we build with you,
+            and the intake that lets us know your family before we ever speak. Open either one and see the real
+            thing, start to finish.
+          </p>
+
+          <div className="mt-10 grid gap-8 md:grid-cols-2">
+            {[
+              {
+                href: "/examples/senior-transition-plan-sample.pdf",
+                img: "/examples/senior-transition-plan-preview.png",
+                label: "Your written deliverable",
+                title: "Your Senior Transition Plan",
+                blurb:
+                  "Your family's situation mapped across all five phases, with the home and the money worked out in real numbers. This is a full example, start to finish.",
+                cta: "Open the example plan",
+              },
+              {
+                href: "/examples/premium-intake-form-sample.pdf",
+                img: "/examples/premium-intake-form-preview.png",
+                label: "Before we ever speak",
+                title: "The Pre-Consultation Intake",
+                blurb:
+                  "Before your call, we get to know your family in real detail, so the 60 minutes are all strategy. Here is exactly what we ask, and how thorough we are about it.",
+                cta: "See the intake form",
+              },
+            ].map((d) => (
+              <a
+                key={d.href}
+                href={d.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col overflow-hidden rounded-xl border border-cream-200 bg-cream/40 transition hover:border-gold hover:shadow-md"
+              >
+                <div className="overflow-hidden border-b border-cream-200 bg-white">
+                  <Image
+                    src={d.img}
+                    alt={`${d.title} preview`}
+                    width={1020}
+                    height={1320}
+                    className="h-56 w-full object-cover object-top transition duration-300 group-hover:scale-[1.02]"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col p-6">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gold-700">{d.label}</p>
+                  <h3 className={`${display} mt-1 text-xl text-navy`}>{d.title}</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-ink/75">{d.blurb}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-burgundy group-hover:gap-2">
+                    {d.cta}
+                    <span aria-hidden>&rarr;</span>
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+          <p className="mt-5 text-xs text-ink/50">
+            Both are real examples. Your plan is built for your family&apos;s specific situation.
+          </p>
+        </div>
+      </section>
+
       {/* PREMIUM OFFER + CONSULT + CTA */}
       <section className="bg-navy text-cream">
         <div className="mx-auto max-w-5xl px-6 py-16 lg:py-20">
