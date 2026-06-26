@@ -240,6 +240,10 @@ export default function RoadmapPage() {
               </div>
             ))}
           </div>
+          <p className="mt-8 max-w-2xl text-sm leading-relaxed text-ink/70">
+            Built on years on the buying side of real estate, across dozens of properties, by a licensed North
+            Carolina broker who now works for your family instead of against it.
+          </p>
         </div>
       </section>
 
@@ -358,7 +362,9 @@ export default function RoadmapPage() {
             <p className={`${display} mt-2 text-2xl`}>Ryan Riggins · Riggins Strategic Solutions</p>
             <p className="mx-auto mt-2 max-w-2xl text-cream/80">
               Ryan runs the whole transition with you, start to finish, and goes deepest on the home and the
-              money, where the biggest dollars are won or lost. Around him, the family and each specialist role.
+              money, where the biggest dollars are won or lost. Years on the buying side of real estate, across
+              dozens of properties, mean he reads the house and the numbers the way the cash buyers do, and puts
+              that to work for your family instead of against it. Around him, the family and each specialist role.
             </p>
           </div>
 
@@ -449,7 +455,26 @@ export default function RoadmapPage() {
             Ninety days of email support so you are never stuck wondering what comes next.
           </p>
 
-          <div className="mt-10 rounded-xl border border-cream/15 bg-white/[0.04] p-7">
+          <div className="mt-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">Everything Premium includes</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[
+                "All 20 Blueprint modules and 70-plus tools. Lifetime access.",
+                "A 21st module, unlocked with Premium, holding your intake docs to prep your call.",
+                "One 60-minute strategy call with Ryan that walks your whole map.",
+                "Your written Senior Transition Plan, your map filled in for your family.",
+                "90 days of priority email support.",
+                "A vetted team lined up for every part outside Ryan's lane.",
+              ].map((item) => (
+                <div key={item} className="flex gap-3 rounded-lg border border-cream/15 bg-white/[0.04] px-4 py-3">
+                  <span className="mt-0.5 text-gold">&#10003;</span>
+                  <span className="text-sm leading-relaxed text-cream/85">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-xl border border-cream/15 bg-white/[0.04] p-7">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">The 60-minute call walks your whole map</p>
             <ol className="mt-4 space-y-2 text-cream/85">
               <li>1. Where your family stands and what you need most. <span className="text-cream/55">(Phase 1)</span></li>
@@ -475,6 +500,9 @@ export default function RoadmapPage() {
             </form>
             <Link href="/pricing" className="text-sm text-cream/80 underline underline-offset-4 hover:text-gold">
               Compare Core and Premium
+            </Link>
+            <Link href="/login" className="text-sm text-cream/55 underline underline-offset-4 hover:text-gold">
+              Already purchased? Log in
             </Link>
           </div>
         </div>

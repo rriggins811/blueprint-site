@@ -12,9 +12,10 @@ export default function HomePage() {
           The Senior Transition Blueprint
         </h1>
         <p className="text-lg text-neutral-600">
-          Nineteen modules that walk your family through the move from the
-          family home to senior living. Built by a contractor who has done it
-          for hundreds of families. Your parent. Your timeline. No surprises.
+          Twenty modules that walk your family through the move from the
+          family home to senior living. Built on years on the buying side of
+          real estate, across dozens of properties. Your parent. Your timeline.
+          No surprises.
         </p>
       </header>
 
@@ -25,7 +26,7 @@ export default function HomePage() {
             <p className="text-2xl font-semibold">${PRICING.core.priceUsd}</p>
           </div>
           <ul className="flex-1 space-y-1 text-sm text-neutral-700">
-            <li>All 19 modules. Lifetime access.</li>
+            <li>All 20 modules. Lifetime access.</li>
             <li>Every interactive tool and printable template.</li>
             <li>Self-paced. Use what fits your situation.</li>
           </ul>
