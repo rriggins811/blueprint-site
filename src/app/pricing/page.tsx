@@ -38,8 +38,16 @@ export default async function PricingPage() {
           Two ways into the full Blueprint.
         </h1>
         <p className="mx-auto max-w-2xl text-lg text-neutral-600">
-          Same 21 modules. Same 71 tools. Same lifetime access. The only
+          Same 20 modules. Same 71 tools. Same lifetime access. The only
           question is whether you want Ryan in the room with you for an hour.
+        </p>
+        <p>
+          <Link
+            href="/roadmap"
+            className="text-sm font-medium text-amber-700 underline underline-offset-4 hover:text-amber-800"
+          >
+            See the whole Senior Transition Roadmap, start to finish &rarr;
+          </Link>
         </p>
       </header>
 
@@ -50,7 +58,7 @@ export default async function PricingPage() {
           price={PRICING.core.priceUsd}
           tagline="The complete system you can run yourself."
           bullets={[
-            "All 21 modules. Lifetime access.",
+            "All 20 modules. Lifetime access.",
             "All 71 tools and templates.",
             "Every interactive calculator and assessment.",
             "Self-paced. No deadlines.",
@@ -68,7 +76,7 @@ export default async function PricingPage() {
             "Personalized transition plan tailored to your situation.",
             "One 60-minute strategy call with Ryan.",
             "90 days of priority email support.",
-            "Premium intake doc to prep your call.",
+            "A 21st module, unlocked with Premium: your intake docs to prep your call.",
           ]}
           highlighted
           alreadyOwned={alreadyPremium}
