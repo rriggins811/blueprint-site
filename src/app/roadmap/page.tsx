@@ -16,6 +16,11 @@ export const metadata = {
   title: "Your Senior Transition Roadmap",
   description:
     "The whole path of a senior transition, laid out before you. Blueprint Premium walks your map with you, start to finish, with Ryan as quarterback and a vetted team around your family.",
+  // This page mirrors the main-site Premium page. Point the canonical there so the
+  // two near-identical pages do not compete in search.
+  alternates: {
+    canonical: "https://rigginsstrategicsolutions.com/blueprint-premium",
+  },
 };
 
 // --- Data -------------------------------------------------------------------
