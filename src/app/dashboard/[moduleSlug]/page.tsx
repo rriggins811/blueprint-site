@@ -230,7 +230,7 @@ function PremiumGate() {
         Premium content
       </p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-        This module is part of Blueprint Premium
+        This module is part of Senior Transition Roadmap
       </h1>
       <p className="mt-3 text-sm text-neutral-600">
         Upgrade to Premium to get the personalized intake form, the 60-minute

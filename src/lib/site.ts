@@ -54,7 +54,7 @@ export const PRICING = {
     courseAccessKey: "blueprint_core" as const,
   },
   premium: {
-    label: "Blueprint Premium",
+    label: "Senior Transition Roadmap",
     priceUsd: 297,
     stripePriceId: process.env.STRIPE_PRICE_BLUEPRINT_PREMIUM!,
     courseAccessKey: "blueprint_premium" as const,

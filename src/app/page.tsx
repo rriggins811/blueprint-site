@@ -78,7 +78,7 @@ function BuyButton({ tier }: { tier: "core" | "premium" }) {
         type="submit"
         className="w-full rounded-md bg-neutral-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
       >
-        Get {tier === "core" ? "Blueprint Core" : "Blueprint Premium"}
+        Get {tier === "core" ? "Blueprint Core" : "Senior Transition Roadmap"}
       </button>
     </form>
   );

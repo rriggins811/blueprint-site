@@ -15,9 +15,9 @@ const display = serif.className;
 export const metadata = {
   title: "Your Senior Transition Roadmap",
   description:
-    "The whole path of a senior transition, laid out before you. Blueprint Premium walks your map with you, start to finish, with Ryan as quarterback and a vetted team around your family.",
-  // This page mirrors the main-site Premium page. Point the canonical there so the
-  // two near-identical pages do not compete in search.
+    "The whole path of a senior transition, laid out before you. Senior Transition Roadmap walks your map with you, start to finish, with Ryan as quarterback and a vetted team around your family.",
+  // This page mirrors the main-site Senior Transition Roadmap page. Point the canonical
+  // there so the two near-identical pages do not compete in search.
   alternates: {
     canonical: "https://rigginsstrategicsolutions.com/blueprint-premium",
   },
@@ -439,7 +439,7 @@ export default function RoadmapPage() {
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className={`${display} text-3xl text-navy sm:text-4xl`}>See exactly what you get</h2>
           <p className="mt-3 max-w-3xl leading-relaxed text-ink/80">
-            No mystery. Here are the two documents at the heart of Premium: the written plan we build with you,
+            No mystery. Here are the two documents at the heart of the Roadmap: the written plan we build with you,
             and the intake that lets us know your family before we ever speak. Open either one and see the real
             thing, start to finish.
           </p>
@@ -504,7 +504,7 @@ export default function RoadmapPage() {
         <div className="mx-auto max-w-5xl px-6 py-16 lg:py-20">
           <h2 className={`${display} text-3xl sm:text-4xl`}>Walk your map with Ryan</h2>
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-cream/85">
-            Blueprint Premium is the guided version. You do not just get the course and the 70-plus tools. You
+            Senior Transition Roadmap is the guided version. You do not just get the course and the 70-plus tools. You
             get Ryan walking your whole map with you, from getting your bearings to crossing the finish line.
             Together we build your written Senior Transition Plan, go deep on the home and the money where the
             biggest dollars are won or lost, and line up the vetted team for the parts outside Ryan's lane.
@@ -512,11 +512,11 @@ export default function RoadmapPage() {
           </p>
 
           <div className="mt-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">Everything Premium includes</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gold">Everything the Roadmap includes</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {[
                 "All 20 Blueprint modules and 70-plus tools. Lifetime access.",
-                "A 21st module, unlocked with Premium, holding your intake docs to prep your call.",
+                "A 21st module, unlocked with the Roadmap, holding your intake docs to prep your call.",
                 "One 60-minute strategy call with Ryan that walks your whole map.",
                 "Your written Senior Transition Plan, your map filled in for your family.",
                 "90 days of priority email support.",
@@ -551,11 +551,11 @@ export default function RoadmapPage() {
                 type="submit"
                 className="rounded-md bg-gold px-7 py-3.5 font-semibold text-navy transition hover:bg-gold-700 hover:text-cream"
               >
-                Get Blueprint Premium, $297
+                Get Senior Transition Roadmap, $297
               </button>
             </form>
             <Link href="/pricing" className="text-sm text-cream/80 underline underline-offset-4 hover:text-gold">
-              Compare Core and Premium
+              Compare Core and the Roadmap
             </Link>
             <Link href="/login" className="text-sm text-cream/55 underline underline-offset-4 hover:text-gold">
               Already purchased? Log in
@@ -564,7 +564,7 @@ export default function RoadmapPage() {
 
           <p className="mt-6 max-w-2xl text-sm leading-relaxed text-cream/70">
             <span className="font-semibold text-gold">14-day money-back guarantee.</span> Refundable right up
-            until your call happens. If Premium is not the right fit for your family, you get every dollar back.
+            until your call happens. If the Roadmap is not the right fit for your family, you get every dollar back.
           </p>
         </div>
       </section>
