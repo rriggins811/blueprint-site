@@ -102,7 +102,7 @@ const PHASES: Phase[] = [
     range: "Modules 13 to 18",
     tagline: "Your team steps in",
     blurb:
-      "Keeping the family standing and the plan funded for the long haul. Family dynamics, aging in place versus moving, long-term care, government benefits, estate planning, and watching for caregiver burnout. This is where your team plugs in. Care goes to Callahan Care Solutions, and for legal, financial, and the rest, we find and vet the local and state professionals you need for your situation.",
+      "Keeping the family standing and the plan funded for the long haul. Family dynamics, aging in place versus moving, long-term care, government benefits, estate planning, and watching for caregiver burnout. This is where your team plugs in. For care, legal, financial, and the rest, we work with your trusted professionals, or hand pick vetted, credentialed ones in your area and licensed in your state.",
     covers: [
       { label: "Family Dynamics", slug: "module-13" },
       { label: "Aging in Place vs Move", slug: "module-14" },
@@ -141,10 +141,10 @@ const FEELINGS = [
   ["Decision paralysis", "Every path feels uncertain, so the easy, costly choice wins."],
 ] as const;
 
-type TeamRole = { role: string; name?: string; href?: string };
+type TeamRole = { role: string };
 
 const TEAM: TeamRole[] = [
-  { role: "Care", name: "Callahan Care Solutions", href: "https://callahancaresolutions.com" },
+  { role: "Care" },
   { role: "Elder-Law Attorney" },
   { role: "Financial Advisor" },
   { role: "CPA / Tax" },
@@ -155,7 +155,7 @@ const TEAM: TeamRole[] = [
 ];
 
 const VETTED_LINE =
-  "We find and vet the local and state professionals you need for your situation.";
+  "We work with your trusted professional, or hand pick a vetted, credentialed one in your area and licensed in your state.";
 
 const CASES = [
   {
@@ -168,7 +168,7 @@ const CASES = [
       "First we get the family on the same page and look at the whole picture honestly. Mrs. Smith was safe with her son, but the house was the problem nobody wanted to touch: a nephew living there rent free, the equity line bleeding every month, and the place full to the ceiling. The first job is not the house, it is clarity. Stop the bleeding, get the house sold the right way, and free up money for Mrs. Smith's care as the dementia gets worse.",
       "Here is where the real money lived, and where most families get taken. The cash offer on that house was $105,000. Pay off the $32,000 still owed on the equity line and the family walks with about $73,000. Fast and clean, and it leaves a fortune on the table. The better path is simple: about $8,000 of the right work, pull the ruined carpet, refinish the hardwoods underneath, fresh paint, reglaze the dated tubs. Nothing fancy, just the work that pays back. In that market the house sells around $225,000. After the equity line, the repairs, and roughly 7 percent in selling costs, the family nets about $169,000. That is close to $96,000 more than the cash offer, for about eight grand and a few weeks of work.",
       "Mrs. Smith had already moved in with her son, so the move here was the house, not the person. We clear it out with respect, which on this one meant two full loads of her keepsakes driven the two hours to the son's home so nothing that mattered got lost. Then the light rehab, about four weeks, then list. Start to finish, roughly 90 days to a closing.",
-      "This is where the team comes in, and where the house money turns into a real plan. I bring in Ryan Callahan at Callahan Care Solutions to build Mrs. Smith a life care plan: review her Medicaid and financial options, plan for a spend-down if it ever comes to that, and stretch her money as far as it will go as the dementia progresses. Just as important, Callahan coaches the son and his wife on the caregiving itself, and respite so they do not burn out. If the family needs more, I find and vet the local pieces: a financial advisor, a CPA, an elder-law attorney, and a memory care option if it is ever needed.",
+      "This is where the team comes in, and where the house money turns into a real plan. We bring in a vetted care specialist to build Mrs. Smith a life care plan: review her Medicaid and financial options, plan for a spend-down if it ever comes to that, and stretch her money as far as it will go as the dementia progresses. Just as important, they coach the son and his wife on the caregiving itself, and respite so they do not burn out. For the rest, we work with the family's own professionals or hand pick vetted ones in their area: a financial advisor, a CPA, an elder-law attorney, and a memory care option if it is ever needed.",
       "The house sells for what it is actually worth. The family clears close to $96,000 more than the cash offer would have handed them. Mrs. Smith stays cared for, with a real plan and real money behind it, and her son and his wife have a team instead of a weight on their shoulders.",
     ],
     outcome:
@@ -184,7 +184,7 @@ const CASES = [
       "She was drowning. An inherited property, a mortgage she did not sign up for, and no clear picture of what she actually had. The first job is to slow it down and look at the whole thing honestly, because the worst decisions in this business get made by people who just want the pain to stop. And what she had was not a tired old house. It was land, a lot more of it than anyone was treating it as.",
       "The house was a distraction. The value was in the dirt. First, sell the one lot that was already split off and ready, for about $40,000, to get cash in her hands and stop the bleeding. Use part of that to fund the real work: clear the brush off the three acres behind, bring in county surveyors to split it into three large lots, build a simple gravel road back with an easement, and bulldoze the tired house for about $10,000. When the dust settles, that is three back lots at about $65,000 each, plus two more around $40,000 each. Take out the mortgage and the costs, and she nets somewhere around $100,000. She paid $4,000 to walk away from land that, handled right, would have put roughly a hundred grand in her pocket.",
       "The order matters as much as the plan. We sell that one ready lot up front so she gets relief in weeks, not months, and so the project funds itself instead of costing her more she does not have. Then the survey and county approvals, the clearing, the road, and the lots come to market in the right sequence. I quarterback the moving parts and the closings so she is not chasing surveyors and builders on her own.",
-      "She is a senior herself, and a six-figure swing changes her whole next chapter, so we plan it instead of letting it slip away. I bring in Ryan Callahan to help her think through her own aging and care plan, and I find and vet the rest of her team: a financial advisor and a CPA so a windfall like this does not turn into a tax surprise, and an estate attorney to set up her own affairs now that she finally has something to protect.",
+      "She is a senior herself, and a six-figure swing changes her whole next chapter, so we plan it instead of letting it slip away. We bring in a vetted care specialist to help her think through her own aging and care plan, and we work with her own professionals or hand pick the rest of her team: a financial advisor and a CPA so a windfall like this does not turn into a tax surprise, and an estate attorney to set up her own affairs now that she finally has something to protect.",
       "She goes from writing a check just to escape, to roughly $100,000 in the bank and a real plan for the years ahead, with people in her corner. The land never changed. The only thing that changed was having someone on her side who knew what it was worth.",
     ],
     outcome:
@@ -372,21 +372,7 @@ export default function RoadmapPage() {
             {TEAM.map((t) => (
               <div key={t.role} className="flex h-full flex-col rounded-lg border border-cream-200 bg-cream/50 p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gold-700">{t.role}</p>
-                {t.name ? (
-                  <>
-                    <p className="mt-1 font-semibold text-navy">{t.name}</p>
-                    <a
-                      href={t.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 text-sm text-burgundy underline underline-offset-2"
-                    >
-                      callahancaresolutions.com
-                    </a>
-                  </>
-                ) : (
-                  <p className="mt-2 text-sm leading-relaxed text-ink/70">{VETTED_LINE}</p>
-                )}
+                <p className="mt-2 text-sm leading-relaxed text-ink/70">{VETTED_LINE}</p>
               </div>
             ))}
           </div>
