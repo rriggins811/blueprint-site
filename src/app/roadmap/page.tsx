@@ -434,7 +434,7 @@ export default function RoadmapPage() {
         </div>
       </section>
 
-      {/* A LOOK INSIDE — the real deliverables */}
+      {/* A LOOK INSIDE - the real deliverables */}
       <section className="bg-white">
         <div className="mx-auto max-w-5xl px-6 py-16">
           <h2 className={`${display} text-3xl text-navy sm:text-4xl`}>See exactly what you get</h2>
@@ -447,8 +447,8 @@ export default function RoadmapPage() {
           <div className="mt-10 grid gap-8 md:grid-cols-2">
             {[
               {
-                href: "/examples/senior-transition-plan-sample.pdf",
-                img: "/examples/senior-transition-plan-preview.png",
+                href: "/examples/senior-transition-plan-sample-2026.pdf",
+                img: "/examples/senior-transition-plan-preview-2026.png",
                 label: "Your written deliverable",
                 title: "Your Senior Transition Plan",
                 blurb:
@@ -456,8 +456,8 @@ export default function RoadmapPage() {
                 cta: "Open the example plan",
               },
               {
-                href: "/examples/premium-intake-form-sample.pdf",
-                img: "/examples/premium-intake-form-preview.png",
+                href: "/examples/premium-intake-form-sample-2026.pdf",
+                img: "/examples/premium-intake-form-preview-2026.png",
                 label: "Before we ever speak",
                 title: "The Pre-Consultation Intake",
                 blurb:
@@ -494,7 +494,9 @@ export default function RoadmapPage() {
             ))}
           </div>
           <p className="mt-5 text-xs text-ink/50">
-            Both are real examples. Your plan is built for your family&apos;s specific situation.
+            The example plan uses the fictional Bennett family to show the full deliverable, and the intake is the
+            real form we send you. Your plan is built for your family&apos;s specific situation. Education and real
+            estate guidance, not legal, tax, or financial advice.
           </p>
         </div>
       </section>
