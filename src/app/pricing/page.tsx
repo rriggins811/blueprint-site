@@ -38,7 +38,7 @@ export default async function PricingPage() {
           Two ways into the full Blueprint.
         </h1>
         <p className="mx-auto max-w-2xl text-lg text-neutral-600">
-          Same 20 modules. Same 71 tools. Same lifetime access. The only
+          Same 20 modules. Same 69 tools. Same lifetime access. The only
           question is whether you want Ryan in the room with you for an hour.
         </p>
         <p>
@@ -59,7 +59,7 @@ export default async function PricingPage() {
           tagline="The complete system you can run yourself."
           bullets={[
             "All 20 modules. Lifetime access.",
-            "All 71 tools and templates.",
+            "All 69 tools and templates.",
             "Every interactive calculator and assessment.",
             "Self-paced. No deadlines.",
           ]}

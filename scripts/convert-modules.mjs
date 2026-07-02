@@ -2,31 +2,36 @@
 // Converts the 21 Blueprint module .docx files to MDX.
 // Usage: node scripts/convert-modules.mjs
 //
-// Source structure of each docx:
-//   __MODULE N__           ← bold paragraph
-//   __Title goes here__    ← bold paragraph (use as title)
-//   Senior Transition Blueprint ... (subtitle line)
-//   *GHL-Ready Copy ...*   (italic, dev note)
-//   # TOOLS ASSESSMENT — Module N   ← H1 dev section, drop everything from here
-//   ...dev paragraphs about tools...
-//   __GHL LESSON 1: Lesson Title__  ← actual lessons start here, bold paragraph
+// Source: the July 2026 content pass in 7:1:26-Re-writes/. Each module has a
+// _Cleaned_ file and sometimes a _BEEFED_ file; BEEFED is the keeper when both
+// exist. Structure of each docx:
+//   __MODULE N__               ← bold paragraph
+//   __Title goes here__        ← bold paragraph (use as title)
+//   Senior Transition Blueprint, Riggins Strategic Solutions   ← subtitle line
+//   __Section Heading__        ← short full-bold paragraphs are section headings
+//   prose...                   (long full-bold paragraphs are emphasis, keep bold)
+//   __IMPORTANT DISCLAIMER: __ ... ← keep, never strip
 //
-// We treat "GHL LESSON N: Title" lines as the canonical lesson H2.
+// Heading heuristic: a full-bold paragraph becomes "## " when it is short
+// (<= 70 chars) and does not end in sentence punctuation.
 
 import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import mammoth from "mammoth";
 
 const SOURCE_DIR =
-  "/Users/rigginsstrategicsolutions/Library/CloudStorage/OneDrive-Personal/Documents/RSS - Running The Business (chat folder)/Running the business/Running the business/Blueprint Re-Write V.2 3-11-26";
+  "/Users/rigginsstrategicsolutions/Library/CloudStorage/OneDrive-Personal/Documents/RSS - Running The Business (chat folder)/Running the business/Running the business/Blueprint Re-Write V.2 3-11-26/7:1:26-Re-writes";
 
 const OUT_DIR = path.join(process.cwd(), "content", "modules");
 
 const FILE_TO_SLUG = (filename) => {
-  if (filename === "Module_19_Premium_GHL_Ready.docx") return "module-19-premium";
-  const m = filename.match(/Module_(\d{2})_Rewrite_GHL_Ready\.docx/);
+  if (/^Module_19_Premium_Cleaned_.*\.docx$/.test(filename))
+    return "module-19-premium";
+  const m = filename.match(/^Module_(\d{2})_(BEEFED|Cleaned)_.*\.docx$/);
   return m ? `module-${m[1]}` : null;
 };
+
+const IS_BEEFED = (filename) => /_BEEFED_/.test(filename);
 
 // Unescape mammoth's over-zealous markdown escaping for plain punctuation.
 // Mammoth escapes punctuation everywhere "to be safe" but it makes prose ugly.
@@ -87,6 +92,12 @@ function applyContentCorrections(md) {
     .replace(/\b90\+\s*tools\b/gi, "71 tools")
     .replace(/\b90\+\s*ready-to-use tools\b/gi, "71 ready-to-use tools");
 
+  // 4b. July 2026: two duplicate tools retired, count is now 69.
+  out = out
+    .replace(/\b71 downloadable tools\b/gi, "69 downloadable tools")
+    .replace(/\b71 ready-to-use tools\b/gi, "69 ready-to-use tools")
+    .replace(/\b71 tools\b/g, "69 tools");
+
   // 5. SeniorSafe pricing paragraph.
   // Source described the old "Free / $14.99 Premium" model with a few
   // trailing sentences about SMS alerts and the app store link. Replace
@@ -111,6 +122,13 @@ function cleanMarkdown(md) {
     .replace(/\r\n/g, "\n");
 }
 
+// A full-bold paragraph is a section heading when it is short and does not
+// end like a sentence. Long bold paragraphs and lead-ins ending in ":" or "."
+// are emphasis prose and stay bold.
+function isHeading(text) {
+  return text.length <= 70 && !/[.:,;]$/.test(text);
+}
+
 // Walk paragraphs (blank-line separated) and clean up for the public lesson.
 function rewriteContent(md) {
   // Split on blank lines, keeping non-empty paragraphs.
@@ -119,65 +137,59 @@ function rewriteContent(md) {
   let title = null;
   let subtitle = null;
   const lessonChunks = [];
-  let phase = "frontmatter"; // frontmatter → dev → lessons
   let i = 0;
 
-  // Phase 1: walk frontmatter and capture title/subtitle (first two bold paragraphs).
-  // Then look for the dev TOOLS ASSESSMENT section and skip it.
+  // Phase 1: header. Two formats exist in the July 2026 sources:
+  //   (a) bold paras: __MODULE N__ then __Title__ then the subtitle line
+  //   (b) one line: "MODULE 9: Home Sale Strategy" (plain or bold) then an
+  //       italic subtitle and real `#` headings (Module 09 style)
   for (; i < paragraphs.length; i++) {
     const p = paragraphs[i];
+    const stripped = p.replace(/^\*\*|\*\*$/g, "").trim();
 
-    // GHL Lesson marker means we're past dev junk and into real content.
-    // After normalizeBold, the marker is `**GHL LESSON N: Title**`.
-    if (/^\*\*GHL LESSON\s+\d+/i.test(p)) {
-      phase = "lessons";
-      break;
-    }
-
-    // Italic GHL-Ready Copy header — drop.
-    if (/^\*GHL-Ready Copy[\s\S]*\*$/i.test(p)) continue;
-
-    // H1 TOOLS ASSESSMENT — enter dev phase, skip until lessons start.
-    if (/^#\s+TOOLS ASSESSMENT/i.test(p)) {
-      phase = "dev";
+    // "MODULE N: Title" one-liner carries the title itself.
+    const oneLiner = stripped.match(/^MODULE\s+\d+:\s*(.+)$/i);
+    if (oneLiner) {
+      if (!title) title = oneLiner[1].trim();
       continue;
     }
 
-    // In frontmatter phase, capture title/subtitle from bold paragraphs.
-    if (phase === "frontmatter") {
-      const boldOnly = p.match(/^\*\*(.+)\*\*$/);
-      if (boldOnly) {
-        const text = boldOnly[1].trim();
-        if (!title) {
-          // First bold = "MODULE N" — skip.
-          if (/^MODULE\s+\d+/i.test(text)) continue;
-          title = text;
-        } else if (!subtitle) {
-          subtitle = text;
-        }
+    const boldOnly = p.match(/^\*\*(.+)\*\*$/);
+    if (boldOnly) {
+      const text = boldOnly[1].trim();
+      if (/^MODULE\s+\d+/i.test(text)) continue;
+      if (!title) {
+        title = text;
         continue;
       }
-      // Non-bold paragraph in frontmatter (subtitle line "Senior Transition Blueprint — RSS")
-      if (!subtitle && /Riggins Strategic Solutions/i.test(p)) {
-        subtitle = p;
-      }
+      // Second bold para after the title = first section heading; body begins.
+      break;
     }
-    // In dev phase, drop everything until we hit a lesson marker (handled at top of loop).
-  }
-
-  // Phase 2: from i onward, paragraphs are the lessons. Walk them.
-  for (; i < paragraphs.length; i++) {
-    const p = paragraphs[i];
-
-    // Convert "**GHL LESSON N: Title**" to "## Title" (post-normalizeBold).
-    const lessonMatch = p.match(/^\*\*GHL LESSON\s+\d+:\s*(.+?)\*\*$/i);
-    if (lessonMatch) {
-      lessonChunks.push(`## ${lessonMatch[1].trim()}`);
+    if (!subtitle && /Riggins Strategic Solutions/i.test(p)) {
+      // May be italic-wrapped; strip emphasis markers for the frontmatter.
+      subtitle = p.replace(/^\*|\*$/g, "").trim();
       continue;
     }
+    // Any other paragraph before a heading = body has begun.
+    if (title) break;
+  }
 
-    // Convert "__RYAN'S REAL TALK: ..." style bold callouts into a callout heading + body.
-    // Actually keep them as-is (bold paragraph) so the prose voice is preserved.
+  // Phase 2: from i onward, everything is body. Short full-bold paragraphs
+  // become H2 section headings; everything else passes through untouched
+  // (including the IMPORTANT DISCLAIMER block, which must never be stripped).
+  for (; i < paragraphs.length; i++) {
+    const p = paragraphs[i];
+    // Real ATX headings (Module 09 style docx) — normalize to H2.
+    const atx = p.match(/^#{1,3}\s+(.+)$/);
+    if (atx) {
+      lessonChunks.push(`## ${atx[1].trim()}`);
+      continue;
+    }
+    const boldOnly = p.match(/^\*\*(.+)\*\*$/);
+    if (boldOnly && isHeading(boldOnly[1].trim())) {
+      lessonChunks.push(`## ${boldOnly[1].trim()}`);
+      continue;
+    }
     lessonChunks.push(p);
   }
 
@@ -203,15 +215,28 @@ function frontmatter({ slug, title, subtitle }) {
 
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
-  const files = (await readdir(SOURCE_DIR))
+  const all = (await readdir(SOURCE_DIR))
     .filter((f) => f.endsWith(".docx") && f.startsWith("Module_"))
     .sort();
 
-  console.log(`Found ${files.length} docx files. Output dir: ${OUT_DIR}\n`);
-
-  for (const filename of files) {
+  // Keeper rule: when a module has both a _BEEFED_ and a _Cleaned_ file,
+  // the BEEFED one wins (the Cleaned copy is an intermediate pass).
+  const keeperBySlug = new Map();
+  for (const filename of all) {
     const slug = FILE_TO_SLUG(filename);
     if (!slug) continue;
+    const existing = keeperBySlug.get(slug);
+    if (!existing || (IS_BEEFED(filename) && !IS_BEEFED(existing))) {
+      keeperBySlug.set(slug, filename);
+    }
+  }
+  const files = [...keeperBySlug.entries()].sort(([a], [b]) =>
+    a.localeCompare(b)
+  );
+
+  console.log(`Found ${files.length} keeper docx files. Output dir: ${OUT_DIR}\n`);
+
+  for (const [slug, filename] of files) {
 
     const buffer = await readFile(path.join(SOURCE_DIR, filename));
     const { value: rawMd } = await mammoth.convertToMarkdown({ buffer });

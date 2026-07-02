@@ -47,12 +47,6 @@ export const RAW_TOOLS: ToolEntry[] = [
     "moduleSlug": "module-02"
   },
   {
-    "slug": "tool-02a-2",
-    "pdfName": "Tool_02A_Guide_5_Pile_Sorting_System",
-    "title": "Guide 5-Pile Sorting System",
-    "moduleSlug": "module-02"
-  },
-  {
     "slug": "tool-02b",
     "pdfName": "Tool_02B_Two_Bag_Daily_Tidy_Tracker",
     "title": "Two-Bag Daily Tidy Tracker",
@@ -60,12 +54,6 @@ export const RAW_TOOLS: ToolEntry[] = [
   },
   {
     "slug": "tool-02c",
-    "pdfName": "Tool_02C_Checklist_Confidence_Building_Areas",
-    "title": "Checklist Confidence Building Areas",
-    "moduleSlug": "module-02"
-  },
-  {
-    "slug": "tool-02c-2",
     "pdfName": "Tool_02C_Confidence_Building_Areas",
     "title": "Confidence Building Areas",
     "moduleSlug": "module-02"

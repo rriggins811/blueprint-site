@@ -314,7 +314,7 @@ export default async function DashboardHome() {
             When you are ready to do the work
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-            Blueprint Core. All 21 modules, all 71 tools. $47 once.
+            Blueprint Core. All 21 modules, all 69 tools. $47 once.
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-neutral-700">
             The Map shows you every step. Core gives you the tools to actually

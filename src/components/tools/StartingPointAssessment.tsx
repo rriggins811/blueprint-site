@@ -168,6 +168,10 @@ export function StartingPointAssessment() {
           Answer all questions to see your starting point.
         </p>
       )}
+      <p className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        Whatever your timeline: if anyone is pushing your family to sign or sell
+        fast, slow down and get someone in your corner first.
+      </p>
     </div>
   );
 }
