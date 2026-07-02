@@ -15,7 +15,7 @@ const CATEGORIES: Array<{
   {
     key: "deepClean",
     label: "Whole-home deep clean",
-    blurb: "First impression. Pros run $400-700.",
+    blurb: "First impression. A deep professional clean runs $400-$600.",
     weight: 7,
     mustDo: true,
   },
@@ -29,13 +29,15 @@ const CATEGORIES: Array<{
   {
     key: "paint",
     label: "Interior paint (key rooms)",
-    blurb: "Living, kitchen, primary bedroom. Highest visual return per dollar.",
+    blurb:
+      "Living, kitchen, primary bedroom in neutral colors. Highest visual return per dollar, typically $2,000-$3,000.",
     weight: 9,
   },
   {
     key: "curbAppeal",
     label: "Curb appeal: mow, mulch, trim",
-    blurb: "30 minutes from the road decides if buyers come inside.",
+    blurb:
+      "30 minutes from the road decides if buyers come inside. Mulch, trim, power wash: $300-$500.",
     weight: 6,
   },
   {
@@ -47,14 +49,16 @@ const CATEGORIES: Array<{
   {
     key: "minorRepairs",
     label: "Minor repairs (sticking doors, leaks, holes)",
-    blurb: "The list of small things buyers count up against you.",
+    blurb:
+      "The list of small things buyers count up against you. Patch, fix, replace: $500-$800.",
     weight: 7,
     mustDo: true,
   },
   {
     key: "carpet",
     label: "Carpet clean or replace high-traffic",
-    blurb: "Clean first. Replace only if cleaning won't fix it.",
+    blurb:
+      "Clean first. Replace only if cleaning won't fix it. Plan on $400-$1,000.",
     weight: 5,
   },
   {
@@ -66,7 +70,8 @@ const CATEGORIES: Array<{
   {
     key: "staging",
     label: "Light staging (rentals or borrows)",
-    blurb: "Two rooms staged, the rest depersonalized. Sells the lifestyle.",
+    blurb:
+      "Two rooms staged, the rest depersonalized. Sells the lifestyle. A consultation runs $200-$400.",
     weight: 5,
   },
   {
@@ -166,6 +171,14 @@ export function SmartPrepBudget() {
           </div>
         </label>
       </section>
+
+      <aside className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+        <strong>Why this pays:</strong> smart prep typically returns 2-3x its
+        cost. A $5,000 prep investment often yields $10,000-$15,000 back in a
+        higher sale price and a faster close. The goal is not perfect, it is
+        &quot;shows well and passes inspection&quot;, then stop. Skip the
+        $80,000 kitchen remodel, that money does not come back.
+      </aside>
 
       <ul className="space-y-3">
         {CATEGORIES.map((c) => {

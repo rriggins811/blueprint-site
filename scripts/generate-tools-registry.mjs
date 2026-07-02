@@ -8,7 +8,7 @@ import { readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const SOURCE_DIR =
-  "/Users/rigginsstrategicsolutions/Library/CloudStorage/OneDrive-Personal/Documents/RSS - Running The Business (chat folder)/Running the business/Running the business/Tools-Checklists Re-Write V.2 3-11-26";
+  "/Users/rigginsstrategicsolutions/Library/CloudStorage/OneDrive-Personal/Documents/RSS - Running The Business (chat folder)/Running the business/Running the business/Tools-Checklists Re-Write V.2 3-11-26/Edited 7-2-26";
 
 const files = readdirSync(SOURCE_DIR)
   .filter((f) => f.endsWith(".pdf") && f.startsWith("Tool_"))

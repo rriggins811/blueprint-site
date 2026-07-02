@@ -106,6 +106,11 @@ export default async function ToolPage({
         <Component />
       </section>
 
+      <p className="mt-10 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
+        Educational worksheet, not legal, tax, or financial advice. Confirm big
+        decisions with the right professional.
+      </p>
+
       {/* Meta Pixel + CAPI Tool_Used fire — client-side. Mounts after the
           server-side tier gate above, so fires only for users who unlocked
           this tool. Custom event name 'Tool_Used' (neutral, not flagged). */}

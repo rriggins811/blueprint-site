@@ -148,7 +148,7 @@ function FreePlanBanner() {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
         <div className="text-sm">
           <p className="font-semibold text-amber-900">
-            Free Plan. Unlock all 21 modules and 71 tools for $47.
+            Free Plan. Unlock all 21 modules and 69 tools for $47.
           </p>
           <p className="mt-0.5 text-xs text-amber-800">
             One-time payment. Lifetime access. No recurring charge.

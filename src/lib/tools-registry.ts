@@ -1,4 +1,4 @@
-// Source of truth for all 71 Blueprint tools.
+// Source of truth for all 69 Blueprint tools.
 // RAW_TOOLS is generated from the PDF source folder by
 // scripts/generate-tools-registry.mjs. This file layers hand-curated
 // overrides on top: which tools have an interactive React component, and
@@ -68,10 +68,8 @@ const OVERRIDES: Record<
 
   // Module 02
   "tool-02a": { description: "Visual reference for the 5-Pile sorting framework." },
-  "tool-02a-2": { description: "Companion guide that walks through the 5-Pile system." },
   "tool-02b": { description: "Daily tracker for the two-bag rhythm. Take it room by room." },
   "tool-02c": { description: "Track which areas you have built confidence in." },
-  "tool-02c-2": { description: "Printable companion checklist." },
 
   // Module 03
   "tool-03a": { description: "The 3-Folder paperwork system. Print and put on the desk." },
