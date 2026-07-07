@@ -1,7 +1,9 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { PRICING, SITE } from "@/lib/site";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { parseCourseAccess, isPaid } from "@/lib/access";
+import { PublicFooter } from "@/components/PublicFooter";
 
 export const metadata = {
   title: "Pricing",
@@ -29,6 +31,7 @@ export default async function PricingPage() {
   }
 
   return (
+    <>
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-6 py-16">
       <header className="flex flex-col gap-3 text-center">
         <p className="text-sm font-medium uppercase tracking-wider text-amber-700">
@@ -70,7 +73,18 @@ export default async function PricingPage() {
           tier="premium"
           title={PRICING.premium.label}
           price={PRICING.premium.priceUsd}
-          tagline="The complete system plus Ryan in your corner."
+          tagline={
+            <>
+              The complete system plus Ryan{" "}
+              <a
+                href={`${SITE.rssSite}/in-your-corner`}
+                className="font-medium text-neutral-900 underline underline-offset-2 hover:text-amber-700"
+              >
+                in your corner
+              </a>
+              .
+            </>
+          }
           bullets={[
             "Everything in Core.",
             "Personalized transition plan tailored to your situation.",
@@ -78,13 +92,26 @@ export default async function PricingPage() {
             "90 days of priority email support.",
             "A 21st module, unlocked with Premium: your intake docs to prep your call.",
           ]}
+          note={
+            <>
+              Ryan Riggins is a Senior Transition Advisor and licensed NC
+              broker with a fiduciary duty to families. He never takes the
+              listing himself.{" "}
+              <a
+                href={`${SITE.rssSite}/about`}
+                className="font-medium text-neutral-900 underline"
+              >
+                Meet Ryan
+              </a>
+            </>
+          }
           highlighted
           alreadyOwned={alreadyPremium}
           loggedIn={Boolean(user)}
         />
       </section>
 
-      <footer className="border-t border-neutral-200 pt-8 text-center text-sm text-neutral-500">
+      <div className="border-t border-neutral-200 pt-8 text-center text-sm text-neutral-500">
         <p>
           Questions? Email{" "}
           <a
@@ -111,8 +138,10 @@ export default async function PricingPage() {
             </Link>
           </p>
         )}
-      </footer>
+      </div>
     </main>
+    <PublicFooter />
+    </>
   );
 }
 
@@ -122,6 +151,7 @@ function PlanCard({
   price,
   tagline,
   bullets,
+  note,
   highlighted,
   alreadyOwned,
   loggedIn,
@@ -129,8 +159,9 @@ function PlanCard({
   tier: "core" | "premium";
   title: string;
   price: number;
-  tagline: string;
+  tagline: ReactNode;
   bullets: string[];
+  note?: ReactNode;
   highlighted?: boolean;
   alreadyOwned: boolean;
   loggedIn: boolean;
@@ -158,6 +189,9 @@ function PlanCard({
           </li>
         ))}
       </ul>
+      {note ? (
+        <p className="text-xs leading-relaxed text-neutral-500">{note}</p>
+      ) : null}
       <div className="mt-auto pt-2">
         {alreadyOwned ? (
           <Link

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Fraunces } from "next/font/google";
 import { SITE } from "@/lib/site";
+import { PublicFooter } from "@/components/PublicFooter";
 
 // Warm display serif for the headlines, mirroring the premium care-roadmap feel.
 const serif = Fraunces({
@@ -158,6 +159,8 @@ const TEAM: TeamRole[] = [
   { role: "Reverse Mortgage / HECM" },
   { role: "Vetted Local Real Estate Agent" },
 ];
+
+const AGENT_ROLE = "Vetted Local Real Estate Agent";
 
 const VETTED_LINE =
   "We work with your trusted professional, or hand pick a vetted, credentialed one in your area and licensed in your state.";
@@ -377,7 +380,22 @@ export default function RoadmapPage() {
             {TEAM.map((t) => (
               <div key={t.role} className="flex h-full flex-col rounded-lg border border-cream-200 bg-cream/50 p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gold-700">{t.role}</p>
-                <p className="mt-2 text-sm leading-relaxed text-ink/70">{VETTED_LINE}</p>
+                {t.role === AGENT_ROLE ? (
+                  <p className="mt-2 text-sm leading-relaxed text-ink/70">
+                    We work with your trusted professional, or hand pick a
+                    vetted, credentialed one in your area and licensed in your
+                    state, at no added cost to you. Ryan never takes the
+                    listing himself, so his only side is yours.{" "}
+                    <a
+                      href={`${SITE.rssSite}/in-your-corner`}
+                      className="font-medium text-navy underline underline-offset-2 hover:text-gold-700"
+                    >
+                      See how the agent referral works
+                    </a>
+                  </p>
+                ) : (
+                  <p className="mt-2 text-sm leading-relaxed text-ink/70">{VETTED_LINE}</p>
+                )}
               </div>
             ))}
           </div>
@@ -571,18 +589,21 @@ export default function RoadmapPage() {
         </div>
       </section>
 
-      {/* DISCLAIMER */}
-      <section className="bg-cream">
-        <div className="mx-auto max-w-5xl px-6 py-10">
-          <p className="text-xs leading-relaxed text-ink/55">
-            This is education and real estate guidance, not legal, tax, or financial advice. Ryan Riggins is a
-            licensed North Carolina real estate broker (#361546, eXp Realty) and works as a fiduciary to the
-            families he serves. We coordinate with your attorney, tax professional, and financial advisor. We do
+      {/* FOOTER (carries the disclaimer: license line + education-not-advice live in the footer itself) */}
+      <PublicFooter
+        variant="cream"
+        note={
+          <>
+            Ryan works as a fiduciary to the families he serves. We coordinate
+            with your attorney, tax professional, and financial advisor. We do
             not replace them. Questions? Email{" "}
-            <a href={`mailto:${SITE.supportEmail}`} className="underline">{SITE.supportEmail}</a>.
-          </p>
-        </div>
-      </section>
+            <a href={`mailto:${SITE.supportEmail}`} className="underline">
+              {SITE.supportEmail}
+            </a>
+            .
+          </>
+        }
+      />
     </main>
   );
 }

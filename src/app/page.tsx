@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { PRICING, SITE } from "@/lib/site";
+import { PublicFooter } from "@/components/PublicFooter";
 
 export default function HomePage() {
   return (
+    <>
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-16">
       <header className="flex flex-col gap-3">
         <p className="text-sm font-medium uppercase tracking-wider text-amber-700">
@@ -43,11 +45,22 @@ export default function HomePage() {
             <li>One 60-minute strategy call with Ryan.</li>
             <li>90 days of email support.</li>
           </ul>
+          <p className="text-xs leading-relaxed text-neutral-500">
+            Ryan Riggins is a Senior Transition Advisor and licensed NC broker
+            with a fiduciary duty to families. He never takes the listing
+            himself.{" "}
+            <a
+              href={`${SITE.rssSite}/about`}
+              className="font-medium text-neutral-900 underline"
+            >
+              Meet Ryan
+            </a>
+          </p>
           <BuyButton tier="premium" />
         </article>
       </section>
 
-      <footer className="border-t border-neutral-200 pt-6 text-sm text-neutral-500">
+      <div className="border-t border-neutral-200 pt-6 text-sm text-neutral-500">
         <p>
           Already purchased?{" "}
           <Link href="/login" className="font-medium text-neutral-900 underline">
@@ -65,8 +78,10 @@ export default function HomePage() {
           </a>
           .
         </p>
-      </footer>
+      </div>
     </main>
+    <PublicFooter />
+    </>
   );
 }
 
