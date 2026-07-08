@@ -26,6 +26,7 @@ import {
   applyFreeTierSetup,
 } from "@/lib/onboard-free-user";
 import { fireServerPurchase } from "@/lib/meta/server-fires";
+import { sendGa4Purchase } from "@/lib/ga4";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -346,6 +347,19 @@ export async function POST(req: NextRequest) {
     // 4. Map-buyer GHL tag (branches nurture toward the $30/$47 upgrade) + Ryan SMS.
     after(notifyMapPurchase({ email, firstName: mapFirstName, lastName: mapLastName }));
 
+    // GA4 server-side purchase (Measurement Protocol). Fire-and-forget.
+    after(
+      sendGa4Purchase({
+        transactionId: session.id,
+        valueUsd:
+          typeof session.amount_total === "number"
+            ? Math.round(session.amount_total) / 100
+            : 9.99,
+        itemName: "blueprint_map",
+        email,
+      })
+    );
+
     // 5. One-click magic login for the welcome email (lands on /dashboard).
     let loginUrl: string | undefined;
     try {
@@ -615,6 +629,17 @@ export async function POST(req: NextRequest) {
       valueUsd: paidUsd,
       contentName: tier === "core" ? "blueprint_core" : "blueprint_premium",
       stripeSessionId: session.id,
+    })
+  );
+
+  // GA4 server-side purchase (Measurement Protocol) with the same actual
+  // amount. Fire-and-forget; analytics never blocks fulfillment.
+  after(
+    sendGa4Purchase({
+      transactionId: session.id,
+      valueUsd: paidUsd,
+      itemName: tier === "core" ? "blueprint_core" : "blueprint_premium",
+      email,
     })
   );
 
