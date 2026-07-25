@@ -81,6 +81,51 @@ const SENIORSAFE_TRIAL_SECTION = `
     </p>
 `;
 
+// Free pivot (Jul 25 2026): every Roadmap application lands in Ryan's inbox
+// in full, replyTo set to the applicant so Ryan can answer with one reply.
+export async function sendRoadmapApplicationToRyan(app: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  state: string;
+  relationship: string;
+  homeSituation: string;
+  timeline: string;
+  biggestConcern: string;
+  professionals: string[];
+  notes?: string | null;
+}): Promise<SendResult> {
+  const esc = (v: string) =>
+    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;white-space:nowrap;">${label}</td><td style="padding:6px 0;">${esc(value)}</td></tr>`;
+  const html = `
+    <h2 style="margin:0 0 4px 0;">Roadmap application: ${esc(app.firstName)} ${esc(app.lastName)}</h2>
+    <p style="margin:0 0 16px 0;color:#555;">Review before the intake call they were just offered. Reply to this email to reach them directly.</p>
+    <table style="border-collapse:collapse;font-size:14px;">
+      ${row("Name", `${app.firstName} ${app.lastName}`)}
+      ${row("Email", app.email)}
+      ${row("Phone", app.phone)}
+      ${row("State", app.state)}
+      ${row("For", app.relationship)}
+      ${row("Home", app.homeSituation)}
+      ${row("Timeline", app.timeline)}
+      ${row("Professionals", app.professionals.length ? app.professionals.join(", ") : "none listed")}
+    </table>
+    <h3 style="margin:20px 0 4px 0;font-size:15px;">Biggest concern</h3>
+    <p style="margin:0;white-space:pre-wrap;">${esc(app.biggestConcern)}</p>
+    ${app.notes ? `<h3 style="margin:20px 0 4px 0;font-size:15px;">Anything else</h3><p style="margin:0;white-space:pre-wrap;">${esc(app.notes)}</p>` : ""}
+    <p style="margin:24px 0 0 0;color:#888;font-size:12px;">Also filed: GHL contact note + Referral Pipeline card (Conversation stage) + this application in the roadmap_applications table.</p>
+  `;
+  return send({
+    to: "ryan.riggins@gmail.com",
+    subject: `Roadmap application: ${app.firstName} ${app.lastName} (${app.state}, ${app.timeline})`,
+    html,
+    replyTo: app.email,
+  });
+}
+
 export async function sendCoreWelcomeEmail(args: {
   to: string;
   firstName?: string | null;

@@ -19,6 +19,7 @@ import {
   upsertGhlContactWithTags,
 } from "@/lib/ghl-proxy";
 import { notifyRoadmapApplication } from "@/lib/webhooks";
+import { sendRoadmapApplicationToRyan } from "@/lib/email/resend";
 
 // Referral Pipeline (created Jul 8 2026 in GHL; ids verified live Jul 24).
 const REFERRAL_PIPELINE_ID = "sz73r9OshVDdLxy3bEVc";
@@ -135,11 +136,49 @@ export async function submitRoadmapApplication(formData: FormData) {
           if (!opp.ok) {
             console.error("[roadmap-apply] opportunity create failed:", opp.error);
           }
+          // Full application as a note on the contact, so Ryan sees the whole
+          // story inside GHL without leaving the CRM.
+          const noteBody =
+            `ROADMAP APPLICATION (${new Date().toISOString().slice(0, 10)})\n` +
+            `For: ${app.relationship} | State: ${app.state}\n` +
+            `Home: ${LABELS[app.homeSituation] ?? app.homeSituation} | Timeline: ${LABELS[app.timeline] ?? app.timeline}\n` +
+            `Professionals in place: ${app.professionals.length ? app.professionals.join(", ") : "none listed"}\n\n` +
+            `Biggest concern:\n${app.biggestConcern}` +
+            (app.notes ? `\n\nAnything else:\n${app.notes}` : "");
+          const note = await callGhlProxy({
+            action: "post",
+            path: `/contacts/${encodeURIComponent(upsert.contactId)}/notes`,
+            body: { body: noteBody },
+            injectLocation: false,
+          });
+          if (!note.ok) {
+            console.error("[roadmap-apply] contact note failed:", note.error);
+          }
         } else {
           console.error("[roadmap-apply] GHL upsert failed:", upsert.error);
         }
       } catch (e) {
         console.error("[roadmap-apply] GHL fan-out threw:", e);
+      }
+
+      const emailRes = await sendRoadmapApplicationToRyan({
+        firstName: app.firstName,
+        lastName: app.lastName,
+        email: app.email,
+        phone: app.phone,
+        state: app.state,
+        relationship: app.relationship,
+        homeSituation: LABELS[app.homeSituation] ?? app.homeSituation,
+        timeline: LABELS[app.timeline] ?? app.timeline,
+        biggestConcern: app.biggestConcern,
+        professionals: app.professionals,
+        notes: app.notes || null,
+      }).catch((e) => {
+        console.error("[roadmap-apply] email to Ryan threw:", e);
+        return { ok: false as const, reason: "threw" };
+      });
+      if (!emailRes.ok) {
+        console.error("[roadmap-apply] email to Ryan failed:", emailRes.reason);
       }
 
       await notifyRoadmapApplication({

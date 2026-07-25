@@ -8,10 +8,13 @@
  * decision is hot. The `?gv=true` variant is required for the inline
  * iframe embed to render instead of redirecting.
  *
- * TODO(ryan): replace with the dedicated "Roadmap intake call" appointment
- * schedule URL (calendar.google.com -> appointment schedules -> open booking
- * page -> copy link). Until then this points at the public 20-minute
- * discovery call so the flow never dead-ends.
+ * CONFIRMED by Ryan (Jul 25 2026): the 20-minute call at
+ * calendar.app.google/EsvzdVFS31JzS4Ui8 IS this schedule (short link
+ * resolves to the same AcZssZ0y_kQQ... id), so the intake call and the
+ * public discovery call share one calendar by design. The 60-minute
+ * roadmap-review call (calendar.app.google/9dxmqtmcX6PuyaFR7 ->
+ * AcZssZ36_aKk...) lives in site.ts as premiumCalBookingUrl and shows on
+ * the dashboard once Ryan grants the Roadmap tier.
  */
 export const INTAKE_CALL_URL =
   "https://calendar.google.com/calendar/appointments/schedules/AcZssZ0y_kQQfkvnf6jQEBvA5X2Onolndq6VleuID3n9hDujDd4CjpOsaJzKqs_eXujvfVVayudxp2h5";
