@@ -95,6 +95,8 @@ export async function sendRoadmapApplicationToRyan(app: {
   biggestConcern: string;
   professionals: string[];
   notes?: string | null;
+  pressure?: string | null;
+  seniorWillingness?: string | null;
 }): Promise<SendResult> {
   const esc = (v: string) =>
     v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -112,15 +114,18 @@ export async function sendRoadmapApplicationToRyan(app: {
       ${row("Home", app.homeSituation)}
       ${row("Timeline", app.timeline)}
       ${row("Professionals", app.professionals.length ? app.professionals.join(", ") : "none listed")}
+      ${app.pressure ? row("Pressure", app.pressure) : ""}
+      ${app.seniorWillingness ? row("Senior's willingness", app.seniorWillingness) : ""}
     </table>
     <h3 style="margin:20px 0 4px 0;font-size:15px;">Biggest concern</h3>
     <p style="margin:0;white-space:pre-wrap;">${esc(app.biggestConcern)}</p>
     ${app.notes ? `<h3 style="margin:20px 0 4px 0;font-size:15px;">Anything else</h3><p style="margin:0;white-space:pre-wrap;">${esc(app.notes)}</p>` : ""}
     <p style="margin:24px 0 0 0;color:#888;font-size:12px;">Also filed: GHL contact note + Referral Pipeline card (Conversation stage) + this application in the roadmap_applications table.</p>
   `;
+  const urgent = app.pressure === "Something is signed or about to be";
   return send({
     to: "ryan@rigginsstrategicsolutions.com",
-    subject: `Roadmap application: ${app.firstName} ${app.lastName} (${app.state}, ${app.timeline})`,
+    subject: `${urgent ? "URGENT " : ""}Roadmap application: ${app.firstName} ${app.lastName} (${app.state}, ${app.timeline})`,
     html,
     replyTo: app.email,
   });

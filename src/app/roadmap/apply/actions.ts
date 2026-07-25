@@ -41,11 +41,30 @@ const FormSchema = z.object({
   ]),
   timeline: z.enum(["now", "3-6-months", "6-12-months", "exploring"]),
   biggestConcern: z.string().trim().min(1, "Tell us the biggest concern.").max(4000),
+  // Optional fit/urgency signals (Jul 25): never required.
+  pressure: z
+    .enum(["no", "letters-calls", "actively-pushing", "signed-or-about-to"])
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
+  seniorWillingness: z
+    .enum(["willing", "reluctant", "resistant", "this-is-for-me"])
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
   professionals: z.array(z.string().max(60)).max(10).optional().default([]),
   notes: z.string().trim().max(4000).optional().or(z.literal("")),
 });
 
 const LABELS: Record<string, string> = {
+  no: "No pressure",
+  "letters-calls": "A few letters or calls",
+  "actively-pushing": "Someone is actively pushing",
+  "signed-or-about-to": "Something is signed or about to be",
+  willing: "Senior is willing",
+  reluctant: "Senior is reluctant",
+  resistant: "Senior is resistant",
+  "this-is-for-me": "The senior is the applicant",
   "own-free-and-clear": "Owns home free and clear",
   "own-with-mortgage": "Owns home with a mortgage",
   renting: "Renting",
@@ -72,6 +91,8 @@ export async function submitRoadmapApplication(formData: FormData) {
     homeSituation: formData.get("homeSituation"),
     timeline: formData.get("timeline"),
     biggestConcern: formData.get("biggestConcern"),
+    pressure: formData.get("pressure"),
+    seniorWillingness: formData.get("seniorWillingness"),
     professionals: formData.getAll("professionals").map(String),
     notes: formData.get("notes"),
   });
@@ -94,6 +115,8 @@ export async function submitRoadmapApplication(formData: FormData) {
     home_situation: app.homeSituation,
     timeline: app.timeline,
     biggest_concern: app.biggestConcern,
+    pressure: app.pressure,
+    senior_willingness: app.seniorWillingness,
     professionals: app.professionals,
     notes: app.notes || null,
     status: "submitted",
@@ -142,7 +165,10 @@ export async function submitRoadmapApplication(formData: FormData) {
             `ROADMAP APPLICATION (${new Date().toISOString().slice(0, 10)})\n` +
             `For: ${app.relationship} | State: ${app.state}\n` +
             `Home: ${LABELS[app.homeSituation] ?? app.homeSituation} | Timeline: ${LABELS[app.timeline] ?? app.timeline}\n` +
-            `Professionals in place: ${app.professionals.length ? app.professionals.join(", ") : "none listed"}\n\n` +
+            `Professionals in place: ${app.professionals.length ? app.professionals.join(", ") : "none listed"}\n` +
+            (app.pressure ? `Cash-offer pressure: ${LABELS[app.pressure] ?? app.pressure}\n` : "") +
+            (app.seniorWillingness ? `Senior's willingness: ${LABELS[app.seniorWillingness] ?? app.seniorWillingness}\n` : "") +
+            `\n` +
             `Biggest concern:\n${app.biggestConcern}` +
             (app.notes ? `\n\nAnything else:\n${app.notes}` : "");
           const note = await callGhlProxy({
@@ -173,6 +199,10 @@ export async function submitRoadmapApplication(formData: FormData) {
         biggestConcern: app.biggestConcern,
         professionals: app.professionals,
         notes: app.notes || null,
+        pressure: app.pressure ? LABELS[app.pressure] ?? app.pressure : null,
+        seniorWillingness: app.seniorWillingness
+          ? LABELS[app.seniorWillingness] ?? app.seniorWillingness
+          : null,
       }).catch((e) => {
         console.error("[roadmap-apply] email to Ryan threw:", e);
         return { ok: false as const, reason: "threw" };
@@ -182,6 +212,8 @@ export async function submitRoadmapApplication(formData: FormData) {
       }
 
       await notifyRoadmapApplication({
+        urgent: app.pressure === "signed-or-about-to",
+        pressure: app.pressure ? LABELS[app.pressure] ?? app.pressure : undefined,
         email: app.email,
         firstName: app.firstName,
         lastName: app.lastName,

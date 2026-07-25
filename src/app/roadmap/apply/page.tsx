@@ -117,6 +117,32 @@ export default async function RoadmapApplyPage({
                 <option value="exploring">Still exploring</option>
               </select>
             </div>
+            <div>
+              <label htmlFor="pressure" className={labelCls}>
+                Has anyone pushed a cash offer, contract, or fast sale on you?{" "}
+                <span className="text-neutral-400">(optional)</span>
+              </label>
+              <select id="pressure" name="pressure" className={inputCls} defaultValue="">
+                <option value="">Select one</option>
+                <option value="no">No</option>
+                <option value="letters-calls">A few letters or calls</option>
+                <option value="actively-pushing">Yes, someone is actively pushing</option>
+                <option value="signed-or-about-to">Yes, something is signed or about to be</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="seniorWillingness" className={labelCls}>
+                How does the senior feel about a change?{" "}
+                <span className="text-neutral-400">(optional)</span>
+              </label>
+              <select id="seniorWillingness" name="seniorWillingness" className={inputCls} defaultValue="">
+                <option value="">Select one</option>
+                <option value="willing">Willing</option>
+                <option value="reluctant">Reluctant</option>
+                <option value="resistant">Resistant</option>
+                <option value="this-is-for-me">This transition is for me</option>
+              </select>
+            </div>
           </div>
 
           <div>

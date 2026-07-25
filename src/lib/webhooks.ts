@@ -178,11 +178,18 @@ export function notifyRoadmapApplication(payload: {
   phone?: string;
   homeSituation: string;
   timeline: string;
+  // Jul 25: pressure signal; urgent = something is signed or about to be.
+  urgent?: boolean;
+  pressure?: string;
 }): Promise<unknown[]> {
   const sms =
+    (payload.urgent ? "🚨 URGENT " : "") +
     `ROADMAP APPLICATION: ${nameFor(payload)} (${payload.email})` +
     ` | home: ${payload.homeSituation} | timeline: ${payload.timeline}` +
-    ` | review before the intake call they just booked`;
+    (payload.pressure ? ` | pressure: ${payload.pressure}` : "") +
+    (payload.urgent
+      ? " | they say something is SIGNED or about to be. Look before the call."
+      : " | review before the intake call they just booked");
   return Promise.all([twilioSendSms(sms, "roadmap-application")]);
 }
 
