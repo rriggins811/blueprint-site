@@ -42,9 +42,10 @@ export default async function DashboardLayout({
   const isFree = access.tier === "free";
   const ssState = seniorsafeStateOf(profile);
 
-  // No row at all (or unknown tier with empty arrays) = no Blueprint access at all.
-  // This is a SeniorSafe-only user who navigated to /dashboard.
-  if (!profile || (!isPaid(access) && access.modules.length === 0 && access.tools.length === 0)) {
+  // Free pivot (Jul 24 2026): the Blueprint is free for every account, so any
+  // user with a profile row gets in (including SeniorSafe-only users). Only a
+  // missing profile row still bounces.
+  if (!profile) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
@@ -102,10 +103,10 @@ export default async function DashboardLayout({
           <nav className="flex items-center gap-4 text-sm">
             {isFree || isCore ? (
               <Link
-                href="/pricing"
+                href="/roadmap"
                 className="font-medium text-amber-700 hover:text-amber-800"
               >
-                Upgrade
+                Get the Roadmap
               </Link>
             ) : null}
             {isPremium ? (
@@ -143,22 +144,26 @@ export default async function DashboardLayout({
 }
 
 function FreePlanBanner() {
+  // Free pivot: the old $47 upsell is gone. The nudge is the free Roadmap,
+  // honest about its gate (intake form with sensitive info + a call with Ryan).
   return (
     <aside className="border-b border-amber-200 bg-amber-50">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
         <div className="text-sm">
           <p className="font-semibold text-amber-900">
-            Free Plan. Unlock all 21 modules and 69 tools for $47.
+            Go ahead and get the entire Roadmap. It is free too.
           </p>
           <p className="mt-0.5 text-xs text-amber-800">
-            One-time payment. Lifetime access. No recurring charge.
+            It starts with an intake form that asks for real detail, then a
+            call with Ryan. He reviews every application personally, and you
+            build the written plan together.
           </p>
         </div>
         <Link
-          href="/pricing"
+          href="/roadmap/apply"
           className="inline-flex items-center justify-center rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800"
         >
-          See pricing
+          Apply for the Roadmap
         </Link>
       </div>
     </aside>
@@ -166,34 +171,9 @@ function FreePlanBanner() {
 }
 
 function CoreUpgradeBanner() {
-  // Tier-aware Core upsell banner. Posts to /api/checkout with upgrade=1
-  // so the server applies the $50-off coupon (server-side gate verifies the
-  // user's current tier is core before honoring it).
-  return (
-    <aside className="border-b border-amber-200 bg-amber-50">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
-        <div className="text-sm">
-          <p className="font-semibold text-amber-900">
-            Get Premium for $50 off. $247 instead of $297.
-          </p>
-          <p className="mt-0.5 text-xs text-amber-800">
-            Adds a personalized transition plan, a 60-minute strategy call
-            with Ryan, and 90 days of email support.
-          </p>
-        </div>
-        <form action="/api/checkout" method="POST">
-          <input type="hidden" name="tier" value="premium" />
-          <input type="hidden" name="upgrade" value="1" />
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800"
-          >
-            Upgrade to Premium $247
-          </button>
-        </form>
-      </div>
-    </aside>
-  );
+  // Legacy Core buyers see the same Roadmap nudge (the $247 upgrade is gone;
+  // the Roadmap is free by application for them too).
+  return <FreePlanBanner />;
 }
 
 function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {

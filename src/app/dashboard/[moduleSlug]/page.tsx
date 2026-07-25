@@ -208,10 +208,10 @@ function ModuleTools({
                   </a>
                 ) : (
                   <Link
-                    href="/pricing"
+                    href="/roadmap/apply"
                     className="inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 font-medium text-white hover:bg-amber-700"
                   >
-                    Unlock with Blueprint Core. $47
+                    Part of the Roadmap. Free, by application
                   </Link>
                 )}
               </div>
@@ -233,14 +233,15 @@ function PremiumGate() {
         This module is part of Senior Transition Roadmap
       </h1>
       <p className="mt-3 text-sm text-neutral-600">
-        Upgrade to Premium to get the personalized intake form, the 60-minute
-        strategy call with Ryan, and 90 days of email support.
+        The Roadmap is free, by application. You fill out the intake form,
+        Ryan reviews it personally, and this module opens up with your intake
+        docs once your Roadmap is underway.
       </p>
       <Link
-        href="/"
+        href="/roadmap/apply"
         className="mt-6 inline-flex justify-center rounded-md bg-neutral-900 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-800"
       >
-        See Premium
+        Apply for the Roadmap
       </Link>
     </main>
   );

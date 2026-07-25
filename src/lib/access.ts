@@ -134,32 +134,28 @@ export function isPaid(access: CourseAccess): boolean {
   return access.tier === "core" || access.tier === "premium";
 }
 
+// Free pivot (Jul 24 2026): every signed-in account gets the full Blueprint.
+// The only gate left is premiumOnly content (the Roadmap deliverables in
+// Module 21 + intake tools), which stays tier === "premium" and is granted
+// manually when Ryan approves a Roadmap application. The legacy per-item
+// allowlists in course_access.modules/tools are ignored for unlocking but
+// preserved in the data for history.
 export function isModuleUnlocked(moduleSlug: string, access: CourseAccess): boolean {
-  if (isPaid(access)) {
-    // Paid tier unlocks everything except premium-only modules unless premium.
-    const mod = MODULES.find((m) => m.slug === moduleSlug);
-    if (!mod) return false;
-    if (mod.premiumOnly) return access.tier === "premium";
-    return true;
-  }
-  return access.modules.includes(moduleSlug);
+  const mod = MODULES.find((m) => m.slug === moduleSlug);
+  if (!mod) return false;
+  if (mod.premiumOnly) return access.tier === "premium";
+  return true;
 }
 
 export function isToolUnlocked(toolSlug: string, access: CourseAccess): boolean {
   const tool = TOOLS.find((t) => t.slug === toolSlug);
   if (!tool) return false;
-  if (isPaid(access)) {
-    if (tool.premiumOnly) return access.tier === "premium";
-    return true;
-  }
-  // Free tier matches against canonical names.
-  const canonical = tool.canonicalSlug ?? tool.slug;
-  return access.tools.includes(canonical);
+  if (tool.premiumOnly) return access.tier === "premium";
+  return true;
 }
 
 // Returns the price label for the tier. Used in upgrade CTAs.
 export function priceLabelFor(tier: Tier): string {
-  if (tier === "core") return "$47";
-  if (tier === "premium") return "$297";
+  if (tier === "premium") return "Free, by application";
   return "Free";
 }

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { SITE } from "@/lib/site";
 
 // Shared identity footer for the PUBLIC pages (home, /pricing, /roadmap) only.
-// This checkout subdomain sells $47/$297 products, so every public page names
+// This subdomain delivers the free Blueprint and Roadmap, so every public page names
 // who is behind it and links back to the main site. Do NOT render this on
 // dashboard or auth pages.
 const STYLES = {

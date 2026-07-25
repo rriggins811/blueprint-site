@@ -48,7 +48,7 @@ export default async function DashboardHome() {
         <p className="mt-2 text-neutral-600">
           {isPaid(access)
             ? "Start at Module 00. Or jump to wherever your family is right now. Self-paced. Lifetime access."
-            : "Module 00 is yours. Start with the Blueprint Map below to see every step in order, then unlock the full toolkit when you are ready."}
+            : "Start at Module 00. Or open the Blueprint Map below to see every step in order. Self-paced. Lifetime access. All free."}
         </p>
       </header>
 
@@ -87,11 +87,8 @@ export default async function DashboardHome() {
             like too much.
           </p>
           <p className="mt-3 text-base text-white/90">
-            The same video lessons and summaries from the $47 course, for{" "}
-            <span className="font-semibold" style={{ color: "#D4AF37" }}>
-              $9.99
-            </span>
-            .
+            The same video lessons and summaries as the full course, free like
+            everything else here.
           </p>
           <a
             href="https://rigginsstrategicsolutions.com/blueprint-preview"
@@ -100,7 +97,7 @@ export default async function DashboardHome() {
             className="mt-5 inline-flex items-center justify-center rounded-md px-6 py-3 text-sm font-bold hover:opacity-90"
             style={{ backgroundColor: "#D4AF37", color: "#1F3A5F" }}
           >
-            Get the Map for $9.99
+            Open the Map
           </a>
         </section>
       ) : null}
@@ -306,27 +303,28 @@ export default async function DashboardHome() {
         </details>
       </section>
 
-      {/* Core upsell — the execution tier. Framed against the Map: the Map
-          shows the steps, Core gives the tools to do each one. */}
+      {/* Roadmap nudge — the one next step for a free user, honest about the
+          gate: intake form with real detail, then a call with Ryan. */}
       {isFreeTier ? (
         <section className="mt-12 rounded-lg border-2 border-amber-600 bg-amber-50 p-7 text-center">
           <p className="text-sm font-medium uppercase tracking-wider text-amber-800">
-            When you are ready to do the work
+            When you want Ryan in your corner
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-            Blueprint Core. All 21 modules, all 69 tools. $47 once.
+            Go ahead and get the entire Roadmap. It is free too.
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-neutral-700">
-            The Map shows you every step. Core gives you the tools to actually
-            do each one: the scripts, checklists, and calculators. Lifetime
-            access, no recurring charge. Premium adds a 60-minute call with
-            Ryan.
+            The Blueprint is the system. The Roadmap is your plan, built with
+            Ryan. It starts with an intake form that asks for real detail,
+            then an intake call, then a follow-up once your written plan is
+            ready to walk through. Where professionals are needed, Ryan brings
+            them in, or works with the ones you already have.
           </p>
           <Link
-            href="/pricing"
+            href="/roadmap/apply"
             className="mt-5 inline-flex items-center justify-center rounded-md bg-amber-700 px-5 py-3 text-sm font-medium text-white hover:bg-amber-800"
           >
-            See pricing
+            Apply for the Roadmap
           </Link>
         </section>
       ) : null}
@@ -376,10 +374,10 @@ function ModuleCard(props: {
       </p>
       {!unlocked ? (
         <Link
-          href="/pricing"
+          href="/roadmap/apply"
           className="mt-4 inline-flex items-center rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
         >
-          Unlock with Blueprint Core. $47
+          Part of the Roadmap. Free, by application
         </Link>
       ) : null}
     </>
@@ -440,10 +438,10 @@ function ToolCard(props: {
       </p>
       {!unlocked ? (
         <Link
-          href="/pricing"
+          href="/roadmap/apply"
           className="mt-4 inline-flex items-center justify-center rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
         >
-          Unlock with Blueprint Core. $47
+          Part of the Roadmap. Free, by application
         </Link>
       ) : null}
     </>

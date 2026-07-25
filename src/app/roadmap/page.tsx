@@ -565,26 +565,26 @@ export default function RoadmapPage() {
           </div>
 
           <div className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <form action="/api/checkout" method="POST">
-              <input type="hidden" name="tier" value="premium" />
-              <button
-                type="submit"
-                className="rounded-md bg-gold px-7 py-3.5 font-semibold text-navy transition hover:bg-gold-700 hover:text-cream"
-              >
-                Get Senior Transition Roadmap, $297
-              </button>
-            </form>
+            <Link
+              href="/roadmap/apply"
+              className="rounded-md bg-gold px-7 py-3.5 font-semibold text-navy transition hover:bg-gold-700 hover:text-cream"
+            >
+              Apply for your free Roadmap
+            </Link>
             <Link href="/pricing" className="text-sm text-cream/80 underline underline-offset-4 hover:text-gold">
-              Compare Core and the Roadmap
+              Compare the Blueprint and the Roadmap
             </Link>
             <Link href="/login" className="text-sm text-cream/55 underline underline-offset-4 hover:text-gold">
-              Already purchased? Log in
+              Already have an account? Log in
             </Link>
           </div>
 
           <p className="mt-6 max-w-2xl text-sm leading-relaxed text-cream/70">
-            <span className="font-semibold text-gold">14-day money-back guarantee.</span> Refundable right up
-            until your call happens. If the Roadmap is not the right fit for your family, you get every dollar back.
+            <span className="font-semibold text-gold">The Roadmap is free, and it is earned with honesty, not
+            money.</span> It starts with an intake form that asks for real detail, then a call with Ryan. He reviews
+            every application personally, builds the plan with you, and a follow-up call walks through how your
+            family moves forward. Where professionals are needed, Ryan brings them in, or works with the ones you
+            already have.
           </p>
         </div>
       </section>

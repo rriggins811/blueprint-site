@@ -168,6 +168,24 @@ export function notifyFreeSignup(payload: {
   ]);
 }
 
+// Free pivot (Jul 24 2026): a Roadmap application is THE conversion event of
+// the referral-first model — it feeds the GHL Referral Pipeline and warrants
+// an immediate text to Ryan so he can review before the booked intake call.
+export function notifyRoadmapApplication(payload: {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  homeSituation: string;
+  timeline: string;
+}): Promise<unknown[]> {
+  const sms =
+    `ROADMAP APPLICATION: ${nameFor(payload)} (${payload.email})` +
+    ` | home: ${payload.homeSituation} | timeline: ${payload.timeline}` +
+    ` | review before the intake call they just booked`;
+  return Promise.all([twilioSendSms(sms, "roadmap-application")]);
+}
+
 export function notifyNewPaidCustomer(payload: {
   email: string;
   firstName?: string;

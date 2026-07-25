@@ -20,13 +20,17 @@ export default async function LoginPage({
     next?: string;
     signup_via_google?: string;
     from?: string;
+    // Set by /signup when the email already has an account (free pivot flow).
+    notice?: string;
+    email?: string;
   }>;
 }) {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { error, next: rawNext, signup_via_google } = await searchParams;
+  const { error, next: rawNext, signup_via_google, notice, email: prefillEmail } =
+    await searchParams;
   const next = safeNext(rawNext);
   if (user) redirect(next);
 
@@ -48,6 +52,12 @@ export default async function LoginPage({
       {error ? (
         <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900">
           {error}
+        </div>
+      ) : null}
+
+      {notice && !error ? (
+        <div className="mt-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          {notice}
         </div>
       ) : null}
 
@@ -76,6 +86,7 @@ export default async function LoginPage({
             type="email"
             name="email"
             required
+            defaultValue={prefillEmail ?? ""}
             autoComplete="email"
             className="rounded-md border border-neutral-300 px-3 py-2 text-base"
           />

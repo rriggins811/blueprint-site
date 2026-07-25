@@ -1,42 +1,18 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { getStripe } from "@/lib/stripe";
-import { PRICING, SITE } from "@/lib/site";
+// Free pivot (Jul 24 2026): the $9.99 Blueprint Map is folded into the free
+// Blueprint. Old ad links and cached sales pages land on free signup.
+import { NextResponse } from "next/server";
+import { SITE } from "@/lib/site";
 
 export const runtime = "nodejs";
 
-// GET /api/checkout/map
-//
-// Cold-traffic checkout for the $9.99 Blueprint Map tripwire. Unlike
-// /api/checkout (core/premium, which is for logged-in Blueprint users), the
-// map buyer arrives from a cold ad with no account, so there is no login,
-// no upgrade-coupon logic, and no user lookup. Stripe Checkout collects the
-// email; the stripe webhook (tier=map branch) issues the access token and
-// emails the buyer their private map link. A GET so the sales-page button can
-// be a plain link.
-export async function GET(_req: NextRequest) {
-  const stripe = getStripe();
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    payment_method_types: ["card"],
-    line_items: [{ price: PRICING.map.stripePriceId, quantity: 1 }],
-    // Straight into the map: it polls for the webhook-issued access by
-    // session_id and unlocks in place (instant access). The emailed token link
-    // is the backstop for returning later / closed tabs.
-    success_url: `${SITE.rssSite}/blueprint-map?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${SITE.rssSite}/blueprint-preview?canceled=1`,
-    allow_promotion_codes: true,
-    // tier=map is read by the webhook to route this to blueprint_access
-    // (a separate store from course_access) instead of the core/premium path.
-    metadata: { tier: "map" },
-    payment_intent_data: { metadata: { tier: "map" } },
-  });
+function dest(): URL {
+  return new URL("/signup", SITE.url);
+}
 
-  if (!session.url) {
-    return NextResponse.json(
-      { error: "Stripe did not return a checkout URL" },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  return NextResponse.redirect(dest(), 303);
+}
 
-  return NextResponse.redirect(session.url, { status: 303 });
+export async function GET() {
+  return NextResponse.redirect(dest(), 308);
 }
