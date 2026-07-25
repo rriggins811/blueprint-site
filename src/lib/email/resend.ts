@@ -119,7 +119,7 @@ export async function sendRoadmapApplicationToRyan(app: {
     <p style="margin:24px 0 0 0;color:#888;font-size:12px;">Also filed: GHL contact note + Referral Pipeline card (Conversation stage) + this application in the roadmap_applications table.</p>
   `;
   return send({
-    to: "ryan.riggins@gmail.com",
+    to: "ryan@rigginsstrategicsolutions.com",
     subject: `Roadmap application: ${app.firstName} ${app.lastName} (${app.state}, ${app.timeline})`,
     html,
     replyTo: app.email,
