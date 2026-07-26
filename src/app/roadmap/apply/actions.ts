@@ -141,7 +141,9 @@ export async function submitRoadmapApplication(formData: FormData) {
             phone: app.phone,
             source: "roadmap-application",
           },
-          ["roadmap-application", "stage-new-lead"]
+          // "family" + "roadmap" are the canonical identity/funnel tags of the
+          // Partner-CRM scheme (Jul 26 2026) — they power the Families smart list.
+          ["roadmap-application", "stage-new-lead", "family", "roadmap"]
         );
 
         if (upsert.ok) {
