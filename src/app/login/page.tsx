@@ -46,17 +46,24 @@ export default async function LoginPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">Log in</h1>
       <p className="mt-2 text-sm text-neutral-600">
-        Use the email and password you set when you activated your account.
+        Use the email and password you set when you created your account.
       </p>
 
       {error ? (
-        <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+        >
           {error}
         </div>
       ) : null}
 
       {notice && !error ? (
-        <div className="mt-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div
+          role="status"
+          className="mt-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+        >
           {notice}
         </div>
       ) : null}
@@ -121,13 +128,10 @@ export default async function LoginPage({
 
       <p className="mt-2 text-center text-xs text-neutral-500">
         New here?{" "}
-        <a
-          href="https://rigginsstrategicsolutions.com/freeguide"
-          className="font-medium text-neutral-900 underline"
-        >
-          Get the free Simple Blueprint
-        </a>{" "}
-        and we will email you an activation link.
+        <Link href="/signup" className="font-medium text-neutral-900 underline">
+          Create a free account
+        </Link>{" "}
+        and the whole Blueprint opens up, no payment.
       </p>
     </main>
   );

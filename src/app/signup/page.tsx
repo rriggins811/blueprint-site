@@ -41,7 +41,11 @@ export default async function SignupPage({
         </p>
 
         {error ? (
-          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+          >
             {error}
           </div>
         ) : null}

@@ -39,10 +39,15 @@ export default async function RoadmapApplyPage({
         </p>
         <p className="mt-3 text-sm text-neutral-500">
           Your answers stay between you and Ryan. They are never sold or shared.
+          Every question is required unless it says optional.
         </p>
 
         {error ? (
-          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+          >
             {error}
           </div>
         ) : null}
@@ -53,25 +58,53 @@ export default async function RoadmapApplyPage({
               <label htmlFor="firstName" className={labelCls}>
                 First name
               </label>
-              <input id="firstName" name="firstName" required className={inputCls} />
+              <input
+                id="firstName"
+                name="firstName"
+                required
+                autoComplete="given-name"
+                className={inputCls}
+              />
             </div>
             <div>
               <label htmlFor="lastName" className={labelCls}>
                 Last name
               </label>
-              <input id="lastName" name="lastName" required className={inputCls} />
+              <input
+                id="lastName"
+                name="lastName"
+                required
+                autoComplete="family-name"
+                className={inputCls}
+              />
             </div>
             <div>
               <label htmlFor="email" className={labelCls}>
                 Email
               </label>
-              <input id="email" name="email" type="email" required className={inputCls} />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                inputMode="email"
+                className={inputCls}
+              />
             </div>
             <div>
               <label htmlFor="phone" className={labelCls}>
                 Phone
               </label>
-              <input id="phone" name="phone" type="tel" required className={inputCls} />
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                required
+                autoComplete="tel"
+                inputMode="tel"
+                className={inputCls}
+              />
             </div>
           </div>
 
@@ -92,7 +125,14 @@ export default async function RoadmapApplyPage({
               <label htmlFor="state" className={labelCls}>
                 What state is the home in?
               </label>
-              <input id="state" name="state" required className={inputCls} placeholder="North Carolina" />
+              <input
+                id="state"
+                name="state"
+                required
+                autoComplete="address-level1"
+                className={inputCls}
+                placeholder="North Carolina"
+              />
             </div>
             <div>
               <label htmlFor="homeSituation" className={labelCls}>

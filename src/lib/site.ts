@@ -2,7 +2,7 @@ export const SITE = {
   name: "The Senior Transition Blueprint",
   shortName: "Blueprint",
   description:
-    "The 19-module course that walks families through moving a parent from the family home to senior living. Built by a contractor who has done it for hundreds of families.",
+    "The free 20-module system that walks families through moving a parent from the family home to senior living. Built by a contractor who spent years on the buying side before switching to the family's side.",
   url:
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://blueprint.rigginsstrategicsolutions.com",
   rssSite: "https://rigginsstrategicsolutions.com",
