@@ -94,7 +94,17 @@ export async function signupFree(formData: FormData) {
 
   if (isDuplicate) {
     // No password to fall back on, so send a one-tap link.
-    await supabase.auth.signInWithOtp({ email });
+    // emailRedirectTo is REQUIRED here: the Supabase project Site URL is
+    // app.seniorsafeapp.com (shared project), so omitting it would land a
+    // Blueprint user inside the SeniorSafe app. blueprint.rigginsstrategic
+    // solutions.com/** is on the redirect allowlist.
+    await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo:
+          "https://blueprint.rigginsstrategicsolutions.com/auth/callback",
+      },
+    });
     redirect(
       `/login?email=${encodeURIComponent(email)}&notice=${encodeURIComponent(
         "You already have an account. Check your email, we just sent a one-tap link to get you back in."
