@@ -159,7 +159,7 @@ export async function sendCoreWelcomeEmail(args: {
       A few things to know:
     </p>
     <ul>
-      <li>You have lifetime access. The 19 modules and every tool stay yours.</li>
+      <li>You have lifetime access. The 20 modules and every tool stay yours.</li>
       <li>Self-paced. Use what fits your situation, skip what does not.</li>
       <li>If you get stuck, reply to this email. I read every one.</li>
     </ul>
@@ -180,7 +180,7 @@ Open your dashboard and start with Module 00 (about 15 minutes):
 ${ctaUrl}
 ${fallbackText}
 A few things to know:
-- You have lifetime access. The 19 modules and every tool stay yours.
+- You have lifetime access. The 20 modules and every tool stay yours.
 - Self-paced. Use what fits your situation, skip what does not.
 - If you get stuck, reply to this email. I read every one.
 

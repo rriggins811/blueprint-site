@@ -23,6 +23,8 @@ export type OnboardArgs = {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  /** Signup intake: crisis | soon | planning. Drives nurture branching. */
+  situation?: string;
   source: string;
 };
 
@@ -229,6 +231,7 @@ export async function applyFreeTierSetup(
     firstName: args.firstName,
     lastName: args.lastName,
     phone: args.phone,
+    situation: args.situation,
     source: args.source,
     signed_up_at: new Date().toISOString(),
     user_id: args.userId,

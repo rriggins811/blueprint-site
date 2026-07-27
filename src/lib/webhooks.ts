@@ -154,9 +154,21 @@ export function notifyFreeSignup(payload: {
   source: string;
   signed_up_at: string;
   user_id: string;
+  situation?: string;
 }): Promise<unknown[]> {
   const makePayload = { ...payload, kind: "free_signup" };
-  const sms = `New free Blueprint signup: ${nameFor(payload)} (${payload.email})`;
+  // Situation + phone make the alert actionable: Ryan can see a crisis signup
+  // and reach out same day instead of waiting on the 24-day nurture.
+  const SITUATION_LABEL: Record<string, string> = {
+    crisis: "CRISIS, deciding in weeks",
+    soon: "coming this year",
+    planning: "planning ahead",
+  };
+  const situationNote = payload.situation
+    ? ` | ${SITUATION_LABEL[payload.situation] ?? payload.situation}`
+    : "";
+  const phoneNote = payload.phone ? ` | ${payload.phone}` : " | no phone";
+  const sms = `New Blueprint signup: ${nameFor(payload)} (${payload.email})${phoneNote}${situationNote}`;
 
   return Promise.all([
     // Legacy GHL webhook — leave as-is, working per Ryan's confirmation.
