@@ -236,6 +236,15 @@ export default function RoadmapPage() {
             middle of a hard week. Most families face it one painful step at a time. This is the map we
             walk together, start to finish, so you can see the whole thing before you decide anything.
           </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="/roadmap/apply"
+              className="inline-flex items-center justify-center rounded-md bg-navy px-7 py-3.5 text-base font-semibold text-cream transition hover:bg-navy/90"
+            >
+              Take me to the form
+            </Link>
+            <span className="text-sm text-ink/60">Free, by application. About 4 minutes.</span>
+          </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             {[
               ["One clear plan", "The whole transition on one page, in order."],
@@ -356,6 +365,20 @@ export default function RoadmapPage() {
           </div>
         </div>
       </section>
+      {/* Quick path to the form, so a scanner never travels far without one */}
+      <section className="border-y border-cream-200 bg-white">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-6 py-10 text-center sm:flex-row sm:justify-between sm:text-left">
+          <p className="text-lg text-ink/80">
+            Seen enough? Start the application and keep reading after.
+          </p>
+          <Link
+            href="/roadmap/apply"
+            className="inline-flex shrink-0 items-center justify-center rounded-md border-2 border-navy px-6 py-3 text-base font-semibold text-navy transition hover:bg-navy hover:text-cream"
+          >
+            Take me to the form
+          </Link>
+        </div>
+      </section>
 
       {/* TEAM HUB */}
       <section className="bg-white">
@@ -449,6 +472,20 @@ export default function RoadmapPage() {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+      {/* Quick path to the form, so a scanner never travels far without one */}
+      <section className="border-y border-cream-200 bg-white">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-6 py-10 text-center sm:flex-row sm:justify-between sm:text-left">
+          <p className="text-lg text-ink/80">
+            Seen enough? Start the application and keep reading after.
+          </p>
+          <Link
+            href="/roadmap/apply"
+            className="inline-flex shrink-0 items-center justify-center rounded-md border-2 border-navy px-6 py-3 text-base font-semibold text-navy transition hover:bg-navy hover:text-cream"
+          >
+            Take me to the form
+          </Link>
         </div>
       </section>
 
