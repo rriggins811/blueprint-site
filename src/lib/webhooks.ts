@@ -74,7 +74,7 @@ async function ghlProxyUpsertAndTag(
     lastName?: string | null;
     phone?: string | null;
   },
-  tag: string,
+  tag: string | string[],
   source: string,
   label: string
 ): Promise<void> {
@@ -87,7 +87,7 @@ async function ghlProxyUpsertAndTag(
         phone: subscriber.phone,
         source,
       },
-      [tag]
+      Array.isArray(tag) ? tag : [tag]
     );
     if (!res.ok) {
       console.warn(
@@ -97,7 +97,7 @@ async function ghlProxyUpsertAndTag(
     }
     // Phase 3 verification logging — drop after Phase 5 sign-off.
     console.info(
-      `[ghl-proxy ${label}] ok contactId=${res.contactId} tag=${tag}`
+      `[ghl-proxy ${label}] ok contactId=${res.contactId} tag=${Array.isArray(tag) ? tag.join(",") : tag}`
     );
   } catch (err) {
     console.warn(
@@ -188,7 +188,13 @@ export function notifyFreeSignup(payload: {
         lastName: payload.lastName,
         phone: payload.phone,
       },
-      "blueprint-signup",
+      // blueprint-signup fires the GHL sequence and is REMOVED at the end of
+      // it. src-blueprint is permanent: it is the source-of-record tag and it
+      // is what keeps these people in the newsletter audience after the
+      // sequence finishes. Applying both here rather than adding src-blueprint
+      // as a workflow step means the newsletter hand-off cannot be broken by
+      // someone editing the workflow.
+      ["blueprint-signup", "src-blueprint"],
       payload.source,
       "blueprint-signup"
     ),
