@@ -171,11 +171,27 @@ export function notifyFreeSignup(payload: {
   const sms = `New Blueprint signup: ${nameFor(payload)} (${payload.email})${phoneNote}${situationNote}`;
 
   return Promise.all([
-    // Legacy GHL webhook — leave as-is, working per Ryan's confirmation.
-    // The webhook hits a GHL inbound-webhook trigger which fires the
-    // pre-existing Free Guide Trial Nurture workflow (the one Kit used to
-    // drive). All freeguide / lead-magnet signups now route through here.
+    // Legacy GHL webhook. The workflow it used to fire ("Free Guide Trial
+    // Nurture") was archived Jul 2026, so this is now a no-op safety net.
+    // Kept because it costs nothing and other flows may still map to it.
     postJson(process.env.GHL_LEGACY_FREESIGNUP_WEBHOOK_URL, makePayload, "ghl-free"),
+    // THE REAL TRIGGER (Jul 28 2026). The GHL workflow
+    // "01 - Blueprint Signup Sequence" fires on tag `blueprint-signup`.
+    // Tagging directly through ghl-proxy instead of relying on the inbound
+    // webhook means no URL coupling: the workflow can be rebuilt or renamed
+    // without a Vercel env change and a redeploy. If this call stops firing,
+    // new signups silently receive NOTHING, so it is the thing to check first.
+    ghlProxyUpsertAndTag(
+      {
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        phone: payload.phone,
+      },
+      "blueprint-signup",
+      payload.source,
+      "blueprint-signup"
+    ),
     twilioSendSms(sms, "free-signup"),
   ]);
 }
