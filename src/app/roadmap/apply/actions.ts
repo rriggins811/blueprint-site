@@ -20,6 +20,7 @@ import {
 } from "@/lib/ghl-proxy";
 import { notifyRoadmapApplication } from "@/lib/webhooks";
 import { sendRoadmapApplicationToRyan } from "@/lib/email/resend";
+import { mintIntakeToken } from "@/lib/intake-token";
 
 // Referral Pipeline (created Jul 8 2026 in GHL; ids verified live Jul 24).
 const REFERRAL_PIPELINE_ID = "sz73r9OshVDdLxy3bEVc";
@@ -105,7 +106,9 @@ export async function submitRoadmapApplication(formData: FormData) {
   const app = parsed.data;
   const admin = createAdminSupabaseClient();
 
-  const { error: insertError } = await admin.from("roadmap_applications").insert({
+  const { data: inserted, error: insertError } = await admin
+    .from("roadmap_applications")
+    .insert({
     first_name: app.firstName,
     last_name: app.lastName,
     email: app.email,
@@ -119,8 +122,10 @@ export async function submitRoadmapApplication(formData: FormData) {
     senior_willingness: app.seniorWillingness,
     professionals: app.professionals,
     notes: app.notes || null,
-    status: "submitted",
-  });
+      status: "submitted",
+    })
+    .select("id")
+    .single();
 
   if (insertError) {
     console.error("[roadmap-apply] insert failed:", insertError.message);
@@ -226,5 +231,13 @@ export async function submitRoadmapApplication(formData: FormData) {
     })()
   );
 
-  redirect("/roadmap/thanks");
+  // Hand the thanks page a signed intake link. They just booked, which is the
+  // moment they are most willing to keep going, and the intake is optional so
+  // offering it here costs nothing if they close the tab.
+  const intakeToken = inserted?.id ? mintIntakeToken({ applicationId: inserted.id }) : null;
+  redirect(
+    intakeToken
+      ? `/roadmap/thanks?t=${encodeURIComponent(intakeToken)}`
+      : "/roadmap/thanks"
+  );
 }

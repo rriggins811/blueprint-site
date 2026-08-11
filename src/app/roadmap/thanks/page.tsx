@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { INTAKE_CALL_EMBED_URL, INTAKE_CALL_URL } from "@/lib/booking";
+import { verifyIntakeToken } from "@/lib/intake-token";
 import { PublicFooter } from "@/components/PublicFooter";
 
 export const metadata = {
@@ -7,7 +8,19 @@ export const metadata = {
   robots: { index: false },
 };
 
-export default function RoadmapThanksPage() {
+export default async function RoadmapThanksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ t?: string }>;
+}) {
+  // The apply action hands us a signed intake token. Offering the intake here
+  // is deliberate: they have just booked, which is the most willing they will
+  // ever be, and it keeps the application form short instead of asking a tired
+  // family seventy questions in one sitting. Entirely optional, and the link
+  // also reaches them by email later.
+  const { t } = await searchParams;
+  const intakeOk = verifyIntakeToken(t).ok;
+
   return (
     <>
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -44,6 +57,34 @@ export default function RoadmapThanksPage() {
             Open the booking page in a new tab.
           </a>
         </p>
+
+        {intakeOk && (
+          <div className="mt-10 rounded-lg border-2 border-amber-300 bg-amber-50 p-6">
+            <p className="text-sm font-semibold uppercase tracking-wider text-amber-800">
+              Optional, and it makes your call better
+            </p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-neutral-900">
+              Give Ryan a head start
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-neutral-700">
+              A short set of questions about the home, the money, and the legal
+              documents. Answer what you know, skip what you do not, and stop
+              whenever you want. Even a half-finished one means less ground to
+              cover on the call. Nothing here is required, and you can do it
+              later instead.
+            </p>
+            <Link
+              href={`/roadmap/intake?t=${encodeURIComponent(t as string)}`}
+              className="mt-5 inline-block rounded-lg bg-neutral-900 px-6 py-3 text-sm font-semibold text-white hover:bg-neutral-800"
+            >
+              Start the intake
+            </Link>
+            <p className="mt-3 text-xs text-neutral-500">
+              Your answers save as you go, so you can close this and come back
+              to it.
+            </p>
+          </div>
+        )}
 
         <div className="mt-10 rounded-lg border border-neutral-200 bg-neutral-50 p-6 text-sm leading-relaxed text-neutral-700">
           <p className="font-medium text-neutral-900">What happens next</p>
