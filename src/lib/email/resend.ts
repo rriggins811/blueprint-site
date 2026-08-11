@@ -168,6 +168,82 @@ export async function sendIntakeToRyan(args: {
   });
 }
 
+/**
+ * The intake invitation, sent to the family right after they apply.
+ *
+ * The thanks page already offers the intake, but that link dies the moment
+ * they close the tab, and the whole point of this form is that an exhausted
+ * adult child can come back to it days later when a real crisis lets up. This
+ * puts a durable, resumable link in their inbox.
+ *
+ * Framed as optional in the subject and the first line, on purpose. The spec's
+ * central risk is abandonment, and a "you need to complete this" email is the
+ * fastest way to make an optional form feel like homework.
+ */
+export async function sendIntakeInviteToApplicant(args: {
+  to: string;
+  firstName: string;
+  intakeUrl: string;
+}): Promise<SendResult> {
+  const esc = (v: string) =>
+    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const name = args.firstName.trim() || "there";
+  const subject = `Optional: give Ryan a head start before your call`;
+
+  const html = `
+    <p>Hi ${esc(name)},</p>
+    <p>Your Roadmap application is in, and Ryan reviews every one personally before the call.</p>
+    <p>If you want to, there is a short set of questions you can answer beforehand: the home, the money, the legal documents, and where your family stands. It is completely optional. Plenty of families walk through it live on the call instead, and that is fine.</p>
+    <p style="text-align:center;margin:32px 0;">
+      <a href="${args.intakeUrl}" style="background:#1B365D;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;font-size:16px;">Start the intake</a>
+    </p>
+    <p><strong>Answer what you know and skip what you do not.</strong> "I don't know" is a genuinely useful answer here, especially on the legal questions. Not knowing whether there is a power of attorney tells Ryan more than a guess would.</p>
+    <p>Your answers save as you go, so you can stop partway, close the tab, and come back to this same link whenever you have a minute. Even a half-finished one means less ground to cover on the call.</p>
+    <p>Hit reply if anything is confusing. I read every one.</p>
+    <p style="margin-top:32px;">
+      Ryan Riggins<br>
+      Senior Transition Advisor and Advocate<br>
+      Riggins Strategic Solutions<br>
+      (336) 553-8933
+    </p>
+    <hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0;">
+    <p style="font-size:11px;color:#888;">
+      Ryan Riggins | NC Real Estate License #361546 | eXp Realty<br>
+      Riggins Strategic Solutions, LLC, Greensboro, NC<br>
+      This is educational and not a substitute for legal, financial, tax, or medical advice.<br>
+      You're receiving this because you applied for the Senior Transition Roadmap at rigginsstrategicsolutions.com. To stop receiving emails, reply with "unsubscribe."
+    </p>
+  `;
+
+  const text = `Hi ${name},
+
+Your Roadmap application is in, and Ryan reviews every one personally before the call.
+
+If you want to, there is a short set of questions you can answer beforehand: the home, the money, the legal documents, and where your family stands. It is completely optional. Plenty of families walk through it live on the call instead, and that is fine.
+
+Start the intake: ${args.intakeUrl}
+
+Answer what you know and skip what you do not. "I don't know" is a genuinely useful answer here, especially on the legal questions. Not knowing whether there is a power of attorney tells Ryan more than a guess would.
+
+Your answers save as you go, so you can stop partway, close the tab, and come back to this same link whenever you have a minute. Even a half-finished one means less ground to cover on the call.
+
+Hit reply if anything is confusing. I read every one.
+
+Ryan Riggins
+Senior Transition Advisor and Advocate
+Riggins Strategic Solutions
+(336) 553-8933
+
+---
+Ryan Riggins | NC Real Estate License #361546 | eXp Realty
+Riggins Strategic Solutions, LLC, Greensboro, NC
+This is educational and not a substitute for legal, financial, tax, or medical advice.
+You're receiving this because you applied for the Senior Transition Roadmap at rigginsstrategicsolutions.com. To stop receiving emails, reply with "unsubscribe."
+`;
+
+  return send({ to: args.to, subject, html, text });
+}
+
 export async function sendCoreWelcomeEmail(args: {
   to: string;
   firstName?: string | null;

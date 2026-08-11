@@ -19,8 +19,12 @@ import {
   upsertGhlContactWithTags,
 } from "@/lib/ghl-proxy";
 import { notifyRoadmapApplication } from "@/lib/webhooks";
-import { sendRoadmapApplicationToRyan } from "@/lib/email/resend";
+import {
+  sendRoadmapApplicationToRyan,
+  sendIntakeInviteToApplicant,
+} from "@/lib/email/resend";
 import { mintIntakeToken } from "@/lib/intake-token";
+import { SITE } from "@/lib/site";
 
 // Referral Pipeline (created Jul 8 2026 in GHL; ids verified live Jul 24).
 const REFERRAL_PIPELINE_ID = "sz73r9OshVDdLxy3bEVc";
@@ -134,6 +138,14 @@ export async function submitRoadmapApplication(formData: FormData) {
     );
   }
 
+  // Minted once and used twice: the thanks-page offer and the invitation email
+  // below. Both point at the same resumable link, so a family can start on the
+  // page and finish from their inbox days later.
+  const intakeToken = inserted?.id ? mintIntakeToken({ applicationId: inserted.id }) : null;
+  const intakeUrl = intakeToken
+    ? `${SITE.url}/roadmap/intake?t=${encodeURIComponent(intakeToken)}`
+    : null;
+
   // CRM + notification fan-out. Failure here is logged, never user-facing.
   after(
     (async () => {
@@ -194,6 +206,20 @@ export async function submitRoadmapApplication(formData: FormData) {
         console.error("[roadmap-apply] GHL fan-out threw:", e);
       }
 
+      // Durable copy of the intake link in the family's inbox. The thanks-page
+      // offer dies when they close the tab, and this form is explicitly built
+      // for someone who comes back days later.
+      if (intakeUrl) {
+        const invite = await sendIntakeInviteToApplicant({
+          to: app.email,
+          firstName: app.firstName,
+          intakeUrl,
+        });
+        if (!invite.ok) {
+          console.error("[roadmap-apply] intake invite failed:", invite.reason);
+        }
+      }
+
       const emailRes = await sendRoadmapApplicationToRyan({
         firstName: app.firstName,
         lastName: app.lastName,
@@ -231,10 +257,7 @@ export async function submitRoadmapApplication(formData: FormData) {
     })()
   );
 
-  // Hand the thanks page a signed intake link. They just booked, which is the
-  // moment they are most willing to keep going, and the intake is optional so
-  // offering it here costs nothing if they close the tab.
-  const intakeToken = inserted?.id ? mintIntakeToken({ applicationId: inserted.id }) : null;
+  // Hand the thanks page the same signed intake link.
   redirect(
     intakeToken
       ? `/roadmap/thanks?t=${encodeURIComponent(intakeToken)}`
