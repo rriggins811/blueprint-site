@@ -131,6 +131,43 @@ export async function sendRoadmapApplicationToRyan(app: {
   });
 }
 
+/**
+ * The completed (or partial) Roadmap intake, sent to Ryan.
+ *
+ * Deliberately ships the SAME markdown that feeds the roadmap generator rather
+ * than a prettier parallel format. One rendering means the document Ryan reads
+ * on his phone before a call and the document pasted into the brain can never
+ * drift apart, and skips stay visible as flags in both.
+ */
+export async function sendIntakeToRyan(args: {
+  applicantName: string;
+  complete: boolean;
+  markdown: string;
+}): Promise<SendResult> {
+  const esc = (v: string) =>
+    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const flagCount = (args.markdown.match(/\(flag\)/g) ?? []).length;
+  const html = `
+    <h2 style="margin:0 0 4px 0;">${args.complete ? "Completed" : "Partial"} intake: ${esc(args.applicantName)}</h2>
+    <p style="margin:0 0 16px 0;color:#555;">
+      ${
+        args.complete
+          ? "They worked all the way through."
+          : "They stopped partway and chose to finish on the call. Everything they skipped is marked below."
+      }
+      ${flagCount ? `<strong>${flagCount} flag-critical unknown${flagCount === 1 ? "" : "s"}.</strong>` : ""}
+    </p>
+    <p style="margin:0 0 16px 0;color:#555;font-size:13px;">Paste the block below straight into the roadmap generator. It is already in Part A format.</p>
+    <pre style="white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.5;background:#faf8f3;border:1px solid #e7e2d6;border-radius:6px;padding:16px;">${esc(args.markdown)}</pre>
+  `;
+  return send({
+    to: "ryan@rigginsstrategicsolutions.com",
+    subject: `${args.complete ? "Intake complete" : "Intake partial"}: ${args.applicantName}${flagCount ? ` (${flagCount} flags)` : ""}`,
+    html,
+    text: args.markdown,
+  });
+}
+
 export async function sendCoreWelcomeEmail(args: {
   to: string;
   firstName?: string | null;
