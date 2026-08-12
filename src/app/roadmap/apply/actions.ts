@@ -26,6 +26,11 @@ import {
 import { mintIntakeToken } from "@/lib/intake-token";
 import { SITE } from "@/lib/site";
 
+// GHL contact custom field "Intake URL" (created Aug 12 2026). Addressed by
+// ID, not fieldKey: a fieldKey-shaped payload returns 201 and stores nothing.
+// Re-find it via the locations custom-fields endpoint if it is ever recreated.
+const GHL_FIELD_INTAKE_URL = "4JuAKDziNkPGcU1Ghadr";
+
 // Referral Pipeline (created Jul 8 2026 in GHL; ids verified live Jul 24).
 const REFERRAL_PIPELINE_ID = "sz73r9OshVDdLxy3bEVc";
 const STAGE_CONVERSATION_ID = "0675a5ad-cd1b-45cb-b37c-ecaf3858530b";
@@ -157,6 +162,11 @@ export async function submitRoadmapApplication(formData: FormData) {
             lastName: app.lastName,
             phone: app.phone,
             source: "roadmap-application",
+            // Per-contact intake link, so a GHL workflow can nudge anyone who
+            // never finished. A static template cannot mint a signed token, so
+            // the value has to arrive on the contact. Merge it in GHL with
+            // {{contact.intake_url}}.
+            ...(intakeUrl ? { customFields: { [GHL_FIELD_INTAKE_URL]: intakeUrl } } : {}),
           },
           // "family" + "roadmap" are the canonical identity/funnel tags of the
           // Partner-CRM scheme (Jul 26 2026) — they power the Families smart list.

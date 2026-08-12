@@ -161,6 +161,16 @@ export type GhlContactInput = {
   phone?: string | null;
   source?: string;
   tags?: readonly string[];
+  /**
+   * Contact custom fields, keyed by GHL field ID (NOT the fieldKey).
+   *
+   * Verified against the live API: a payload keyed by fieldKey
+   * ("contact.intake_url") is accepted with a 201 and then silently
+   * discarded, the field stays empty and nothing reports an error. Only the
+   * opaque field id persists. Field ids are listed by the locations
+   * custom-fields endpoint.
+   */
+  customFields?: Record<string, string>;
 };
 
 type UpsertedContact = {
@@ -187,6 +197,14 @@ export async function upsertGhlContact(
   if (input.phone) body.phone = input.phone;
   if (input.source) body.source = input.source;
   if (input.tags && input.tags.length > 0) body.tags = input.tags;
+  if (input.customFields && Object.keys(input.customFields).length > 0) {
+    // Array of { id, value }. See the note on GhlContactInput.customFields:
+    // the fieldKey form looks like it works and does not.
+    body.customFields = Object.entries(input.customFields).map(([id, value]) => ({
+      id,
+      value,
+    }));
+  }
 
   const res = await callGhlProxy<UpsertedContact>({
     action: "post",
