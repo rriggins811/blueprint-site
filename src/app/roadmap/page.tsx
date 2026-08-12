@@ -20,7 +20,7 @@ export const metadata = {
   // This page mirrors the main-site Senior Transition Roadmap page. Point the canonical
   // there so the two near-identical pages do not compete in search.
   alternates: {
-    canonical: "https://rigginsstrategicsolutions.com/blueprint-premium",
+    canonical: "https://rigginsstrategicsolutions.com/the-roadmap",
   },
 };
 
