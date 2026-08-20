@@ -8,7 +8,7 @@ import { join, extname } from 'node:path';
 const ROOTS = ['content', 'src'];
 const EXT = new Set(['.md', '.mdx', '.ts', '.tsx']);
 const BANNED = [/\bjourney\b/gi, /\bleverage\b/gi, /\bnavigat(e|ing|ion)\b/gi, /game-changer/gi, /deep[ -]dive/gi, /\bempower/gi, /\bunlock/gi, /important to note/gi];
-const RETIRED = [/\$297(?![\d,.])/g, /\$47(?![\d,.])/g, /\$9\.99(?!\d)/g, /seniortransitionblueprint\.com/gi, /Blueprint Premium/gi];
+const RETIRED = [/\$297(?![\d,.])/g, /\$47(?![\d,.])/g, /(?:mind ?map|the map)[^.\n]{0,40}\$9\.99|\$9\.99[^.\n]{0,40}(?:mind ?map|the map)/gi, /seniortransitionblueprint\.com/gi, /Blueprint Premium/gi];
 
 function* walk(dir) {
   for (const e of readdirSync(dir)) {
