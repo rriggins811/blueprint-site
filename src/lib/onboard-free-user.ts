@@ -110,7 +110,6 @@ export async function applyFreeTierSetup(
 
   const existingAccess = profile ? parseCourseAccess(profile.course_access) : null;
   const grantFree = !existingAccess || existingAccess.tier === "free";
-  const startTrial = isEligibleForTrialStart(profile);
 
   const updates: Record<string, unknown> = {
     first_name: profile?.first_name ?? args.firstName ?? null,
@@ -122,14 +121,18 @@ export async function applyFreeTierSetup(
     updates.course_access = freeTierAccess();
   }
 
-  if (startTrial) {
-    // Match the SeniorSafe app's trial schema. ai_consent stays false by default;
-    // the SeniorSafe app collects consent in-app on first AI usage.
-    updates.subscription_tier = "trial";
-    updates.trial_status = "active";
-    updates.trial_start_date = new Date().toISOString();
-    updates.subscription_source = args.source;
-  }
+  // NO SENIORSAFE TRIAL ON ANY BLUEPRINT SIGNUP. Ryan, 2026-08-23.
+  //
+  // This block used to set subscription_tier/trial_status/trial_start_date,
+  // which silently enrolled every Blueprint signup in a 14-day SeniorSafe
+  // trial they never asked for. The tag then synced to GHL and fired a
+  // SeniorSafe trial email. On 2026-08-23 a lead signed up for the free
+  // Blueprint at 7:17am, received a SeniorSafe app email at 7:30, and clicked
+  // unsubscribe at 7:46. Twenty-nine minutes, and the unsubscribe is
+  // account-wide in GHL, so it cost the Blueprint relationship too.
+  //
+  // They asked for the Blueprint. Give them the Blueprint.
+  // Do not re-add this without Ryan saying so.
 
   if (profile) {
     const { error } = await admin
@@ -219,7 +222,16 @@ export async function applyFreeTierSetup(
     last_name: args.lastName ?? null,
     phone: args.phone ?? null,
     source: args.source,
-    raw_payload: { source: args.source, user_id: args.userId, channel: "blueprint" },
+    // `situation` is the signup form's own words for what is going on, and
+    // "crisis" is one of the answers. It used to reach Ryan's phone via
+    // notifyFreeSignup and then vanish, so nothing in Supabase or GHL could
+    // ever tell you a lead was in crisis. Persist it. Added 2026-08-23.
+    raw_payload: {
+      source: args.source,
+      user_id: args.userId,
+      channel: "blueprint",
+      situation: args.situation ?? null,
+    },
   });
   if (leadErr) {
     console.warn(`[onboard ${args.email}] lead insert failed: ${leadErr.message}`);
@@ -241,24 +253,14 @@ export async function applyFreeTierSetup(
   // counterpart — this code path runs after the user has redirected away
   // from any browser interaction (e.g. /activate redirect to /dashboard).
   // Caller wraps the returned promise in after() if it cares about completion.
-  let trialFanout: Promise<unknown> | undefined;
-  if (startTrial) {
-    trialFanout = fireServerStartTrial({
-      userId: args.userId,
-      email: args.email,
-      firstName: args.firstName,
-      lastName: args.lastName,
-      source: args.source,
-    });
-  }
-  const combinedFanout = trialFanout
-    ? Promise.all([fanout, trialFanout])
-    : fanout;
+  // StartTrial CAPI removed with the trial itself, 2026-08-23. No Blueprint
+  // signup starts a SeniorSafe trial any more, so there is no trial to report.
+  const combinedFanout = fanout;
 
   return {
     fanout: combinedFanout,
     freeTierGranted: grantFree,
-    trialStarted: startTrial,
+    trialStarted: false,
   };
 }
 

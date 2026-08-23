@@ -22,7 +22,6 @@ import {
   notifyMapPurchase,
 } from "@/lib/webhooks";
 import {
-  startSeniorsafeTrialIfEligible,
   applyFreeTierSetup,
 } from "@/lib/onboard-free-user";
 import { fireServerPurchase } from "@/lib/meta/server-fires";
@@ -528,14 +527,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Start the SeniorSafe trial if this user hasn't used theirs yet.
-  // Gate inside the helper: only fires when subscription_tier is null/free
-  // AND trial_status is null/none. Won't downgrade a paid SeniorSafe user
-  // and won't reset an expired/converted trial.
-  await startSeniorsafeTrialIfEligible(
-    userId,
-    `blueprint_${tier}_purchase`
-  );
+  // SeniorSafe trial start REMOVED here, Ryan 2026-08-23. No Blueprint path,
+  // free or paid, starts a SeniorSafe trial or sends SeniorSafe email. See the
+  // note in lib/onboard-free-user.ts for what this cost. The helper is left in
+  // place for a future SeniorSafe-native signup, but nothing Blueprint calls it.
 
   // Parse the buyer's name for the welcome email + downstream fan-out.
   const customerName = session.customer_details?.name ?? null;
