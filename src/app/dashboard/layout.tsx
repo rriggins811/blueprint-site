@@ -79,7 +79,7 @@ export default async function DashboardLayout({
         )
       : null;
 
-  const tierBadge = isPremium ? "Premium" : access.tier === "core" ? "Core" : "Free";
+  const tierBadge = isPremium ? "Roadmap" : access.tier === "core" ? "Core" : "Free";
   const tierBadgeColor = isPremium
     ? "bg-amber-100 text-amber-800"
     : access.tier === "core"
@@ -111,7 +111,7 @@ export default async function DashboardLayout({
             ) : null}
             {isPremium ? (
               <a
-                href={`mailto:${SITE.supportEmail}?subject=Premium%20support`}
+                href={`mailto:${SITE.supportEmail}?subject=Roadmap%20support`}
                 className="text-neutral-600 hover:text-neutral-900"
               >
                 Email Ryan
@@ -190,7 +190,7 @@ function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {
           </p>
           {expiresAt ? (
             <p className="mt-0.5 text-xs text-amber-800">
-              Premium support active until{" "}
+              Roadmap email support through{" "}
               {expiresAt.toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",

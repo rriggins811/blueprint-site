@@ -83,7 +83,7 @@ export default async function ModulePage({
           Module {content.module.number}
           {content.module.premiumOnly ? (
             <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-              Premium
+              Roadmap
             </span>
           ) : null}
         </p>
@@ -227,7 +227,7 @@ function PremiumGate() {
   return (
     <main className="mx-auto w-full max-w-md px-6 py-16 text-center">
       <p className="text-sm font-medium uppercase tracking-wide text-amber-700">
-        Premium content
+        Roadmap content
       </p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">
         This module is part of Senior Transition Roadmap
