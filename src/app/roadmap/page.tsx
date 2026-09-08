@@ -565,7 +565,7 @@ export default function RoadmapPage() {
             get Ryan walking your whole map with you, from getting your bearings to crossing the finish line.
             Together we build your written Senior Transition Plan, go deep on the home and the money where the
             biggest dollars are won or lost, and line up the vetted team for the parts outside Ryan's lane.
-            Ninety days of email support so you are never stuck wondering what comes next.
+            Email support so you are never stuck wondering what comes next.
           </p>
 
           <div className="mt-10">
@@ -576,7 +576,7 @@ export default function RoadmapPage() {
                 "A 21st module, unlocked with the Roadmap, holding your intake docs to prep your call.",
                 "One 60-minute strategy call with Ryan that walks your whole map.",
                 "Your written Senior Transition Plan, your map filled in for your family.",
-                "90 days of priority email support.",
+                "Email support while you execute.",
                 "A vetted team lined up for every part outside Ryan's lane.",
               ].map((item) => (
                 <div key={item} className="flex gap-3 rounded-lg border border-cream/15 bg-white/[0.04] px-4 py-3">
@@ -593,7 +593,7 @@ export default function RoadmapPage() {
               <li>1. Where your family stands and what you need most. <span className="text-cream/55">(Phase 1)</span></li>
               <li>2. The home and the money, the heaviest lift, your real options and what protects the most. <span className="text-cream/55">(Phase 2)</span></li>
               <li>3. The move and the long game, what is coming and who handles each piece. <span className="text-cream/55">(Phases 3 and 4)</span></li>
-              <li>4. Your team and your first 90 days. <span className="text-cream/55">(Phases 4 and 5)</span></li>
+              <li>4. Your team and your next steps. <span className="text-cream/55">(Phases 4 and 5)</span></li>
             </ol>
             <p className="mt-4 text-cream/85">
               You leave with a written <strong className="font-semibold text-cream">Senior Transition Plan</strong>, your personal version of this

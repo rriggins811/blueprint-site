@@ -71,14 +71,6 @@ export default async function DashboardLayout({
     );
   }
 
-  const premiumExpiresAt =
-    isPremium && access.purchased_at
-      ? new Date(
-          new Date(access.purchased_at).getTime() +
-            SITE.premiumSupportDays * 24 * 60 * 60 * 1000
-        )
-      : null;
-
   const tierBadge = isPremium ? "Roadmap" : access.tier === "core" ? "Core" : "Free";
   const tierBadgeColor = isPremium
     ? "bg-amber-100 text-amber-800"
@@ -136,7 +128,7 @@ export default async function DashboardLayout({
       </header>
       {isFree ? <FreePlanBanner /> : null}
       {isCore ? <CoreUpgradeBanner /> : null}
-      {isPremium ? <PremiumBanner expiresAt={premiumExpiresAt} /> : null}
+      {isPremium ? <PremiumBanner /> : null}
       <SeniorSafeBanner state={ssState} blueprintTier={access.tier} />
       <div className="flex-1">{children}</div>
     </div>
@@ -176,7 +168,7 @@ function CoreUpgradeBanner() {
   return <FreePlanBanner />;
 }
 
-function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {
+function PremiumBanner() {
   return (
     <aside className="border-b border-amber-200 bg-amber-50">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
@@ -188,17 +180,6 @@ function PremiumBanner({ expiresAt }: { expiresAt: Date | null }) {
             Come ready to talk through your family&rsquo;s situation. You&rsquo;re
             welcome to invite a sibling.
           </p>
-          {expiresAt ? (
-            <p className="mt-0.5 text-xs text-amber-800">
-              Roadmap email support through{" "}
-              {expiresAt.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-              .
-            </p>
-          ) : null}
         </div>
         <a
           href={SITE.premiumCalBookingUrl}

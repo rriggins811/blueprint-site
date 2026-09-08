@@ -17,17 +17,7 @@ export const SITE = {
   // (safe to delete).
   premiumCalBookingUrl:
     "https://calendar.google.com/calendar/appointments/schedules/AcZssZ36_aKkOtOdsloP36J9PSKl2qOSD2bYnDU3mCfdYauXFjxjgSq5B_T0Rrb7CfZltK4uZF6eAfnu",
-  premiumSupportDays: 90,
 } as const;
-
-export function premiumExpiresFromGrant(grant: unknown): Date | null {
-  if (!grant || typeof grant !== "object") return null;
-  const g = grant as { purchased_at?: string };
-  if (!g.purchased_at) return null;
-  const start = new Date(g.purchased_at);
-  if (Number.isNaN(start.getTime())) return null;
-  return new Date(start.getTime() + SITE.premiumSupportDays * 24 * 60 * 60 * 1000);
-}
 
 export const PRICING = {
   map: {
