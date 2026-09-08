@@ -52,32 +52,28 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, "").replace(/\n\s+/g, "\n").trim();
 }
 
-// Reusable SeniorSafe trial section appended to any Blueprint welcome email.
-// The trial is auto-started for every new Blueprint signup (free or paid) and
-// grants the full Premium+ experience including Maggie for 14 days. Same
-// login as the Blueprint dashboard — Supabase session is shared across the
-// blueprint.r.com and app.seniorsafeapp.com sub-products.
+// Reusable SeniorSafe section appended to any Blueprint welcome email.
+// Ryan 2026-09-08: no Blueprint path starts a SeniorSafe trial any more. The app
+// has a free tier that never expires and one paid tier at $14.99/mo.
 const SENIORSAFE_TRIAL_SECTION = `
     <hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0;" />
-    <h2 style="font-size:18px;margin:0 0 8px 0;">Plus: 14 days of SeniorSafe free</h2>
+    <h2 style="font-size:18px;margin:0 0 8px 0;">Plus: SeniorSafe, free to start</h2>
     <p style="margin:0 0 12px 0;">
-      Your Blueprint signup also activated a 14-day trial of the SeniorSafe
-      family-coordination app at the full Premium+ tier. No card, no extra
-      signup. Same login.
+      SeniorSafe is the family app for the daily part of senior care. The free
+      tier never expires and never asks for a card.
     </p>
-    <p style="margin:0 0 8px 0;">For the next 14 days you have:</p>
+    <p style="margin:0 0 8px 0;">Free, forever:</p>
     <ul>
-      <li>Daily wellness check-ins, medication and appointment tracking, secure document vault.</li>
-      <li>Private family messaging that beats group texts.</li>
-      <li>Maggie, the AI transition specialist trained on the full Blueprint methodology — the same one Premium+ subscribers get.</li>
+      <li>The senior's daily check-in, with a missed check-in or I Need Help alert to one family contact.</li>
+      <li>Medication reminders and the emergency card.</li>
+      <li>Maggie, the AI transition specialist trained on the full Blueprint.</li>
     </ul>
     <p>
-      <a href="https://app.seniorsafeapp.com" style="display:inline-block;background:#1B365D;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Open the app</a>
+      <a href="https://app.seniorsafeapp.com" style="display:inline-block;background:#1B365D;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Get SeniorSafe free</a>
     </p>
     <p style="color:#555;font-size:13px;">
-      Use the same login (Blueprint password or Google sign-in). Trial is
-      automatic — when it ends you can pick a paid SeniorSafe plan or just
-      stop using the app, no charges either way.
+      $14.99/mo unlocks the full family toolkit whenever your family wants it.
+      Cancel anytime. The free tier stays.
     </p>
 `;
 
@@ -297,7 +293,7 @@ A few things to know:
 - Self-paced. Use what fits your situation, skip what does not.
 - If you get stuck, reply to this email. I read every one.
 
-Plus: your Blueprint signup activated a 14-day Premium+ trial of the SeniorSafe app, same login: https://app.seniorsafeapp.com
+Plus: the SeniorSafe family app is free to start, forever: https://app.seniorsafeapp.com
 
 Ryan
 Riggins Strategic Solutions`;
@@ -499,7 +495,7 @@ export async function sendFreeGuideEmail(args: {
   <ul style="line-height: 1.7; padding-left: 20px;">
     <li>The online interactive Module 00 + 7-day Quick Start checklist</li>
     <li>Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker</li>
-    <li>A 14-day Premium+ trial of the SeniorSafe app on iPhone, Android, and web (same login)</li>
+    <li>The SeniorSafe family app, free to start on iPhone, Android, and web</li>
     <li>Maggie, the AI transition specialist trained on the full Blueprint methodology</li>
   </ul>
 
@@ -548,7 +544,7 @@ ${introText}
 
 - The online interactive Module 00 + 7-day Quick Start checklist
 - Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker
-- A 14-day Premium+ trial of the SeniorSafe app on iPhone, Android, and web (same login)
+- The SeniorSafe family app, free to start on iPhone, Android, and web
 - Maggie, the AI transition specialist trained on the full Blueprint methodology
 
 Activate my free account: ${activateUrl}
@@ -599,7 +595,7 @@ export async function sendMapAccessEmail(args: {
       <li><strong>Your interactive Blueprint Map</strong>, all 19 module video lessons and plain-English summaries.</li>
       <li><strong>Module 0 unlocked</strong>, with the rest of the modules ready to unlock with the full Blueprint.</li>
       <li><strong>Your free protection guides</strong>, the Simple Blueprint plus the family decision guides.</li>
-      <li><strong>A 14-day SeniorSafe trial</strong>, the family-coordination app with Maggie.</li>
+      <li><strong>SeniorSafe, free to start</strong>, the family-coordination app with Maggie.</li>
     </ul>
     <p>Start with Module 0. It lays out the whole path in about 15 minutes.</p>
     <p>If you get stuck, just reply to this email. I read every one.</p>
@@ -617,7 +613,7 @@ Thank you. Your Blueprint Map is unlocked, and I set up a free account for you s
 Open your dashboard:
 ${ctaUrl}
 ${fallbackText}
-Inside you will find your interactive Blueprint Map (19 video lessons and summaries), Module 0 unlocked, your free protection guides, and a 14-day SeniorSafe trial.
+Inside you will find your interactive Blueprint Map (19 video lessons and summaries), Module 0 unlocked, your free protection guides, and SeniorSafe, the family-coordination app, free to start.
 
 Start with Module 0. It lays out the whole path in about 15 minutes.
 

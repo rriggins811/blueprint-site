@@ -239,11 +239,11 @@ function SeniorSafeBanner({
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm">
             <p className="font-semibold text-neutral-900">
-              Your SeniorSafe trial ended.
+              Your SeniorSafe trial ended. The free tier is still yours.
             </p>
             <p className="mt-0.5 text-xs text-neutral-700">
-              Resubscribe at $14.99/mo for full app access (Premium) or
-              $39.99/mo (Premium+ with Maggie).
+              The daily check-in, one family contact, medication reminders, and
+              Maggie stay free. $14.99/mo unlocks the full family toolkit.
             </p>
           </div>
           <a
@@ -252,7 +252,7 @@ function SeniorSafeBanner({
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:border-neutral-500"
           >
-            Resubscribe
+            Open SeniorSafe
           </a>
         </div>
       </aside>
@@ -268,7 +268,7 @@ function SeniorSafeBanner({
             <p className="font-semibold text-emerald-900">
               You have full SeniorSafe access.
               {state.kind === "premium_plus"
-                ? " Maggie is included with your Premium+ plan."
+                ? " Maggie is included."
                 : ""}
             </p>
           </div>
