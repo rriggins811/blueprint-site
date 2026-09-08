@@ -176,9 +176,9 @@ export const MODULES: Module[] = [
   {
     slug: "module-19-premium",
     number: "19+",
-    title: "Premium Session Prep and Intake",
+    title: "Roadmap Prep: Intake and Session Prep",
     summary:
-      "Premium-tier exclusive content. Pre-work for the 60-minute strategy call with Ryan, plus extended frameworks.",
+      "Pre-work for your free 60-minute Roadmap call with Ryan. Intake form and session prep worksheet.",
     toolCount: 2,
     premiumOnly: true,
   },
