@@ -132,7 +132,7 @@ const PHASES: Phase[] = [
     range: "Module 19",
     tagline: "Wrap it up and breathe",
     blurb:
-      "Wrap it up, take a breath, and look at what is next. A check-back to make sure the plan held, and a soft landing into SeniorSafe for the day to day once the transition is done.",
+      "Wrap it up, take a breath, and look at what is next. A check-back to make sure the plan held, and a soft landing into SeniorSafeApp for the day to day once the transition is done.",
     covers: [{ label: "Completion", slug: "module-19" }],
     tools: ["Completion Assessment"],
   },

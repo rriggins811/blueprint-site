@@ -46,8 +46,8 @@ export default async function ActivatePage({
         Activate your free account
       </h1>
       <p className="mt-3 text-sm text-neutral-600">
-        Unlock Module 00, your three free tools, and your 14-day SeniorSafe
-        app trial. Use the same login on iPhone and Android.
+        Unlock Module 00 and your three free tools. The same login works in
+        SeniorSafeApp on iPhone and Android.
       </p>
 
       {error ? (

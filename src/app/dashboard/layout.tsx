@@ -209,7 +209,7 @@ function SeniorSafeBanner({
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm">
             <p className="font-semibold text-sky-900">
-              Your SeniorSafe app trial is active for {days} more day
+              Your SeniorSafeApp trial is active for {days} more day
               {days === 1 ? "" : "s"}.
             </p>
             <p className="mt-0.5 text-xs text-sky-800">
@@ -239,7 +239,7 @@ function SeniorSafeBanner({
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm">
             <p className="font-semibold text-neutral-900">
-              Your SeniorSafe trial ended. The free tier is still yours.
+              Your SeniorSafeApp trial ended. The free tier is still yours.
             </p>
             <p className="mt-0.5 text-xs text-neutral-700">
               The daily check-in, one family contact, medication reminders, and
@@ -252,7 +252,7 @@ function SeniorSafeBanner({
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:border-neutral-500"
           >
-            Open SeniorSafe
+            Open SeniorSafeApp
           </a>
         </div>
       </aside>
@@ -266,7 +266,7 @@ function SeniorSafeBanner({
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm">
             <p className="font-semibold text-emerald-900">
-              You have full SeniorSafe access.
+              You have full SeniorSafeApp access.
               {state.kind === "premium_plus"
                 ? " Maggie is included."
                 : ""}

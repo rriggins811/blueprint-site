@@ -35,7 +35,7 @@ export default async function ResetPage({
       <h1 className="text-3xl font-semibold tracking-tight">Set a new password</h1>
       <p className="mt-2 text-sm text-neutral-600">
         Pick a password you will remember. The same password works in the
-        SeniorSafe app, so you only need one.
+        SeniorSafeApp, so you only need one.
       </p>
 
       {error ? (

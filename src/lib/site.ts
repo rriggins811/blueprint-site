@@ -38,7 +38,7 @@ export const PRICING = {
     stripePriceId: "price_1TibMGFoeumweL6DnXG5OE0f",
   },
   core: {
-    label: "Blueprint Core",
+    label: "Senior Transition Blueprint",
     priceUsd: 47,
     stripePriceId: process.env.STRIPE_PRICE_BLUEPRINT_CORE!,
     courseAccessKey: "blueprint_core" as const,
