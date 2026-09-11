@@ -1,5 +1,5 @@
 // Single source of truth for "this user just became a free Blueprint customer."
-// Sets free-tier course_access (if not already paid), starts a SeniorSafe
+// Sets free-tier course_access (if not already paid), starts a Hammock365
 // trial (if eligible), inserts a leads row, and returns the notification
 // fan-out promise the caller wraps in after().
 //
@@ -124,10 +124,10 @@ export async function applyFreeTierSetup(
   // NO SENIORSAFE TRIAL ON ANY BLUEPRINT SIGNUP. Ryan, 2026-08-23.
   //
   // This block used to set subscription_tier/trial_status/trial_start_date,
-  // which silently enrolled every Blueprint signup in a 14-day SeniorSafe
+  // which silently enrolled every Blueprint signup in a 14-day Hammock365
   // trial they never asked for. The tag then synced to GHL and fired a
-  // SeniorSafe trial email. On 2026-08-23 a lead signed up for the free
-  // Blueprint at 7:17am, received a SeniorSafe app email at 7:30, and clicked
+  // Hammock365 trial email. On 2026-08-23 a lead signed up for the free
+  // Blueprint at 7:17am, received a Hammock365 app email at 7:30, and clicked
   // unsubscribe at 7:46. Twenty-nine minutes, and the unsubscribe is
   // account-wide in GHL, so it cost the Blueprint relationship too.
   //
@@ -153,10 +153,10 @@ export async function applyFreeTierSetup(
 
   // Family-code provisioning. Both the maggie-chat and ai-chat edge functions
   // require user_profile.family_code to be set (joins against family_context
-  // for Maggie's running summary and SeniorSafe AI's per-family ledger).
-  // SeniorSafe app's own signup flow generates a family_code, but Blueprint
+  // for Maggie's running summary and Hammock365 AI's per-family ledger).
+  // Hammock365 app's own signup flow generates a family_code, but Blueprint
   // signups never went through that path — so prior to this fix every
-  // /freeguide and Stripe-webhook user landed in the SeniorSafe app with
+  // /freeguide and Stripe-webhook user landed in the Hammock365 app with
   // family_code=NULL and got "No family code found" the moment they opened
   // an AI tab. Idempotent: if a code already exists we leave it alone.
   // Service-role-only: protect_user_profile_columns() trigger blocks
@@ -254,7 +254,7 @@ export async function applyFreeTierSetup(
   // from any browser interaction (e.g. /activate redirect to /dashboard).
   // Caller wraps the returned promise in after() if it cares about completion.
   // StartTrial CAPI removed with the trial itself, 2026-08-23. No Blueprint
-  // signup starts a SeniorSafe trial any more, so there is no trial to report.
+  // signup starts a Hammock365 trial any more, so there is no trial to report.
   const combinedFanout = fanout;
 
   return {
@@ -264,7 +264,7 @@ export async function applyFreeTierSetup(
   };
 }
 
-// Stripe webhook helper. Starts a SeniorSafe trial alongside paid Blueprint
+// Stripe webhook helper. Starts a Hammock365 trial alongside paid Blueprint
 // access, with the same eligibility gate (never downgrade, never reset).
 // Course access is set separately by the webhook caller.
 export async function startSeniorsafeTrialIfEligible(

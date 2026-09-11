@@ -209,7 +209,7 @@ function SeniorSafeBanner({
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm">
             <p className="font-semibold text-sky-900">
-              Your SeniorSafeApp trial is active for {days} more day
+              Your Hammock365 trial is active for {days} more day
               {days === 1 ? "" : "s"}.
             </p>
             <p className="mt-0.5 text-xs text-sky-800">
@@ -230,16 +230,16 @@ function SeniorSafeBanner({
     );
   }
 
-  // Expired trial AND user is still Blueprint free: encourage SeniorSafe resub.
-  // (For Blueprint paid customers we don't push SeniorSafe resub here — the
-  // SeniorSafe app handles that flow inside its own dashboard.)
+  // Expired trial AND user is still Blueprint free: encourage Hammock365 resub.
+  // (For Blueprint paid customers we don't push Hammock365 resub here — the
+  // Hammock365 app handles that flow inside its own dashboard.)
   if (state.kind === "expired" && blueprintTier === "free") {
     return (
       <aside className="border-b border-neutral-200 bg-neutral-50">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm">
             <p className="font-semibold text-neutral-900">
-              Your SeniorSafeApp trial ended. The free tier is still yours.
+              Your Hammock365 trial ended. The free tier is still yours.
             </p>
             <p className="mt-0.5 text-xs text-neutral-700">
               The daily check-in, one family contact, medication reminders, and
@@ -252,21 +252,21 @@ function SeniorSafeBanner({
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 hover:border-neutral-500"
           >
-            Open SeniorSafeApp
+            Open Hammock365
           </a>
         </div>
       </aside>
     );
   }
 
-  // Paid SeniorSafe user (any Blueprint tier): "you're in, go use the app."
+  // Paid Hammock365 user (any Blueprint tier): "you're in, go use the app."
   if (state.kind === "paid" || state.kind === "premium_plus") {
     return (
       <aside className="border-b border-emerald-200 bg-emerald-50">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-6 py-3 md:flex-row md:items-center md:justify-between">
           <div className="text-sm">
             <p className="font-semibold text-emerald-900">
-              You have full SeniorSafeApp access.
+              You have full Hammock365 access.
               {state.kind === "premium_plus"
                 ? " Maggie is included."
                 : ""}

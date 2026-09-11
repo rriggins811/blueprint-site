@@ -297,7 +297,7 @@ export function notifyMapPurchase(payload: {
 }
 
 // Subscription cancellation → applies seniorsafe-churned GHL tag.
-// Today this fires only for SeniorSafe subscription cancellations (Blueprint
+// Today this fires only for Hammock365 subscription cancellations (Blueprint
 // Core/Premium are one-time purchases). Senior-safe stripe-webhook ALSO
 // applies this tag from its own customer.subscription.deleted handler —
 // double-tagging is safe (GHL tag-on-contact is idempotent), and keeping

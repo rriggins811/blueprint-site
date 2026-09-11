@@ -98,15 +98,15 @@ function applyContentCorrections(md) {
     .replace(/\b71 ready-to-use tools\b/gi, "69 ready-to-use tools")
     .replace(/\b71 tools\b/g, "69 tools");
 
-  // 5. SeniorSafe pricing paragraph.
+  // 5. Hammock365 pricing paragraph.
   // Source described the old "Free / $14.99 Premium" model with a few
   // trailing sentences about SMS alerts and the app store link. Replace
   // the entire run with the new tiered language. The pattern matches
-  // from the SeniorSafe header through the trailing "app.seniorsafeapp.com."
+  // from the Hammock365 header through the trailing "app.hammock365.com."
   // closing line to wipe stale sentences in one shot.
   out = out.replace(
-    /SeniorSafe App[^.]*?Free\s*\/\s*\$14\.99 per month Premium[\s\S]*?Download at app\.seniorsafeapp\.com\.\s*/gi,
-    "SeniorSafe App (14 days free trial): Daily check-ins, medication tracking, document vault, emergency info card, AI assistant, and family coordination. Start with 14 days free, no credit card required. After trial: $14.99/mo Premium or $39.99/mo Premium+ (adds Maggie, the AI specialist for adult children running point on a parent's transition). seniorsafeapp.com "
+    /Hammock365[^.]*?Free\s*\/\s*\$14\.99 per month Premium[\s\S]*?Download at app\.seniorsafeapp\.com\.\s*/gi,
+    "Hammock365 (14 days free trial): Daily check-ins, medication tracking, document vault, emergency info card, AI assistant, and family coordination. Start with 14 days free, no credit card required. After trial: $14.99/mo Premium or $39.99/mo Premium+ (adds Maggie, the AI specialist for adult children running point on a parent's transition). hammock365.com "
   );
 
   // 6. Em dash purge per Ryan's voice rules. Replace U+2014 with " - ",

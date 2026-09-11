@@ -48,10 +48,10 @@ export async function signIn(formData: FormData) {
 }
 
 // Server action that kicks off Supabase's Google OAuth flow. Reuses the
-// existing SeniorSafe-configured Google provider — does not modify provider
+// existing Hammock365-configured Google provider — does not modify provider
 // config. Sends the user to Google's consent screen; Google redirects back
 // to /auth/callback, which runs first-time onboarding (free tier course_access
-// + SeniorSafe trial) for new users.
+// + Hammock365 trial) for new users.
 export async function signInWithGoogle(formData: FormData) {
   const next = safeNext(
     (formData.get("next") as string | null) ?? undefined

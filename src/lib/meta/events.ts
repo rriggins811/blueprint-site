@@ -3,7 +3,7 @@
 // IMPORTANT: Do NOT use 'OrderFormPurchase' — that legacy Squarespace event
 // name is BLOCKED on Meta's side. Always use 'Purchase' (standard event) with
 // content_name in customData to differentiate Core ($47) vs Premium ($297) vs
-// SeniorSafe Premium ($14.99) vs SeniorSafe Premium+ ($39.99).
+// Hammock365 Premium ($14.99) vs Hammock365 Premium+ ($39.99).
 export const META_EVENTS = {
   LEAD: "Lead",
   TRIAL: "StartTrial",

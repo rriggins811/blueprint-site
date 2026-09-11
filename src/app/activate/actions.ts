@@ -122,7 +122,7 @@ export async function activate(formData: FormData) {
       redirect(buildErrorRedirect(token, upd.error.message));
     }
 
-    // Backfill SeniorSafe trial + ensure free-tier course_access. Idempotent —
+    // Backfill Hammock365 trial + ensure free-tier course_access. Idempotent —
     // won't downgrade a paid Blueprint tier or reset an already-used trial.
     const setup = await applyFreeTierSetup({
       userId: existing.id,

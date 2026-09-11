@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
   };
 
   // Subscription cancellation — fan out to the Kit churn Make scenario.
-  // This event fires for the SeniorSafe subscriptions ($14.99/mo,
+  // This event fires for the Hammock365 subscriptions ($14.99/mo,
   // $39.99/mo) hosted on the same Stripe account. Blueprint Core/Premium
   // are one-time purchases so they never produce this event. The Stripe
   // event's customer object carries only the customer ID; resolve the
@@ -258,7 +258,7 @@ export async function POST(req: NextRequest) {
 
   // Blueprint Map ($9.99): its own access store (public.blueprint_access) for
   // the token-gated map, PLUS a real free-tier Blueprint ACCOUNT so the buyer
-  // lands in our ecosystem (dashboard, locked modules, free guides, SeniorSafe
+  // lands in our ecosystem (dashboard, locked modules, free guides, Hammock365
   // trial, nurture) instead of a dead-end token link. Handled before the
   // core/premium path. Idempotent on stripe_session_id; account onboarding is
   // idempotent (never downgrades a paid tier).
@@ -332,7 +332,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Free-tier onboarding: course_access (Module 0 + free tools), family
-    // code, SeniorSafe trial, the Free-Guide nurture, and a leads row. Never
+    // code, Hammock365 trial, the Free-Guide nurture, and a leads row. Never
     // downgrades a user who is already Core/Premium.
     const onboard = await applyFreeTierSetup({
       userId: mapUserId,
@@ -527,8 +527,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // SeniorSafe trial start REMOVED here, Ryan 2026-08-23. No Blueprint path,
-  // free or paid, starts a SeniorSafe trial or sends SeniorSafe email. See the
+  // Hammock365 trial start REMOVED here, Ryan 2026-08-23. No Blueprint path,
+  // free or paid, starts a Hammock365 trial or sends Hammock365 email. See the
   // note in lib/onboard-free-user.ts for what this cost. The helper is left in
   // place for a future SeniorSafe-native signup, but nothing Blueprint calls it.
 

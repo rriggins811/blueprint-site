@@ -52,14 +52,14 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, "").replace(/\n\s+/g, "\n").trim();
 }
 
-// Reusable SeniorSafe section appended to any Blueprint welcome email.
-// Ryan 2026-09-08: no Blueprint path starts a SeniorSafe trial any more. The app
+// Reusable Hammock365 section appended to any Blueprint welcome email.
+// Ryan 2026-09-08: no Blueprint path starts a Hammock365 trial any more. The app
 // has a free tier that never expires and one paid tier at $14.99/mo.
 const SENIORSAFE_TRIAL_SECTION = `
     <hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0;" />
-    <h2 style="font-size:18px;margin:0 0 8px 0;">Plus: SeniorSafeApp, free to start</h2>
+    <h2 style="font-size:18px;margin:0 0 8px 0;">Plus: Hammock365, free to start</h2>
     <p style="margin:0 0 12px 0;">
-      SeniorSafeApp is the family app for the daily part of senior care. The free
+      Hammock365 is the family app for the daily part of senior care. The free
       tier never expires and never asks for a card.
     </p>
     <p style="margin:0 0 8px 0;">Free, forever:</p>
@@ -69,7 +69,7 @@ const SENIORSAFE_TRIAL_SECTION = `
       <li>Maggie, the AI transition specialist trained on the full Blueprint.</li>
     </ul>
     <p>
-      <a href="https://app.seniorsafeapp.com" style="display:inline-block;background:#1B365D;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Get SeniorSafeApp free</a>
+      <a href="https://app.hammock365.com" style="display:inline-block;background:#1B365D;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Get Hammock365 free</a>
     </p>
     <p style="color:#555;font-size:13px;">
       $14.99/mo unlocks the full family toolkit whenever your family wants it.
@@ -293,7 +293,7 @@ A few things to know:
 - Self-paced. Use what fits your situation, skip what does not.
 - If you get stuck, reply to this email. I read every one.
 
-Plus: the SeniorSafeApp family app is free to start, forever: https://app.seniorsafeapp.com
+Plus: the Hammock365 family app is free to start, forever: https://app.hammock365.com
 
 Ryan
 Riggins Strategic Solutions`;
@@ -495,7 +495,7 @@ export async function sendFreeGuideEmail(args: {
   <ul style="line-height: 1.7; padding-left: 20px;">
     <li>The online interactive Module 00 + 7-day Quick Start checklist</li>
     <li>Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker</li>
-    <li>The SeniorSafeApp family app, free to start on iPhone, Android, and web</li>
+    <li>The Hammock365 family app, free to start on iPhone, Android, and web</li>
     <li>Maggie, the AI transition specialist trained on the full Blueprint methodology</li>
   </ul>
 
@@ -505,7 +505,7 @@ export async function sendFreeGuideEmail(args: {
 
   ${magnetBackupHtml}
 
-  <p>You'll set a password on the next screen. The same password also works in the SeniorSafeApp app on your phone, so you only need to remember one.</p>
+  <p>You'll set a password on the next screen. The same password also works in the Hammock365 app on your phone, so you only need to remember one.</p>
 
   <p style="font-size: 13px; color: #666;">
     If the button does not work, paste this link into your browser:<br>
@@ -516,7 +516,7 @@ export async function sendFreeGuideEmail(args: {
 
   <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 32px 0;">
 
-  <p style="font-size: 14px; color: #444;">The SeniorSafeApp app trial includes daily wellness check-ins, secure document vault, private family messaging, and Maggie. No card, no extra signup. Trial is automatic — when it ends you can pick a paid plan or just stop using the app, no charges either way.</p>
+  <p style="font-size: 14px; color: #444;">The Hammock365 app trial includes daily wellness check-ins, secure document vault, private family messaging, and Maggie. No card, no extra signup. Trial is automatic — when it ends you can pick a paid plan or just stop using the app, no charges either way.</p>
 
   <p style="margin-top: 32px;">
     Ryan Riggins<br>
@@ -544,16 +544,16 @@ ${introText}
 
 - The online interactive Module 00 + 7-day Quick Start checklist
 - Three free interactive tools: Starting Point Assessment, Net Proceeds Calculator, and the 7-Day Quick Start tracker
-- The SeniorSafeApp family app, free to start on iPhone, Android, and web
+- The Hammock365 family app, free to start on iPhone, Android, and web
 - Maggie, the AI transition specialist trained on the full Blueprint methodology
 
 Activate my free account: ${activateUrl}
 ${magnetBackupText}
-You'll set a password on the next screen. The same password also works in the SeniorSafeApp app on your phone, so you only need to remember one.
+You'll set a password on the next screen. The same password also works in the Hammock365 app on your phone, so you only need to remember one.
 
 Activation link is good for 7 days.
 
-The SeniorSafeApp app trial includes daily wellness check-ins, secure document vault, private family messaging, and Maggie. No card, no extra signup. Trial is automatic — when it ends you can pick a paid plan or just stop using the app, no charges either way.
+The Hammock365 app trial includes daily wellness check-ins, secure document vault, private family messaging, and Maggie. No card, no extra signup. Trial is automatic — when it ends you can pick a paid plan or just stop using the app, no charges either way.
 
 Ryan Riggins
 Riggins Strategic Solutions
@@ -566,7 +566,7 @@ Riggins Strategic Solutions
 // Blueprint Map ($9.99) welcome email. Sent by the stripe webhook (tier=map
 // branch) right after purchase. The map buyer now gets a real Blueprint account,
 // so this LEADS with the dashboard (one-click magic login) where their map, the
-// locked modules, the free guides, and the SeniorSafe trial all live, and keeps
+// locked modules, the free guides, and the Hammock365 trial all live, and keeps
 // the direct token map link at the BOTTOM as a no-login fallback.
 export async function sendMapAccessEmail(args: {
   to: string;
@@ -595,7 +595,7 @@ export async function sendMapAccessEmail(args: {
       <li><strong>Your interactive Blueprint Map</strong>, all 19 module video lessons and plain-English summaries.</li>
       <li><strong>Module 0 unlocked</strong>, with the rest of the modules ready to unlock with the full Blueprint.</li>
       <li><strong>Your free protection guides</strong>, the Simple Blueprint plus the family decision guides.</li>
-      <li><strong>SeniorSafeApp, free to start</strong>, the family-coordination app with Maggie.</li>
+      <li><strong>Hammock365, free to start</strong>, the family-coordination app with Maggie.</li>
     </ul>
     <p>Start with Module 0. It lays out the whole path in about 15 minutes.</p>
     <p>If you get stuck, just reply to this email. I read every one.</p>
@@ -613,7 +613,7 @@ Thank you. Your Blueprint Map is unlocked, and I set up a free account for you s
 Open your dashboard:
 ${ctaUrl}
 ${fallbackText}
-Inside you will find your interactive Blueprint Map (19 video lessons and summaries), Module 0 unlocked, your free protection guides, and SeniorSafeApp, the family-coordination app, free to start.
+Inside you will find your interactive Blueprint Map (19 video lessons and summaries), Module 0 unlocked, your free protection guides, and Hammock365, the family-coordination app, free to start.
 
 Start with Module 0. It lays out the whole path in about 15 minutes.
 

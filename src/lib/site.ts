@@ -6,7 +6,7 @@ export const SITE = {
   url:
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://blueprint.rigginsstrategicsolutions.com",
   rssSite: "https://rigginsstrategicsolutions.com",
-  seniorsafeSite: "https://seniorsafeapp.com",
+  seniorsafeSite: "https://hammock365.com",
   supportEmail: "support@rigginsstrategicsolutions.com",
   // 60-minute Premium planning call. Hardcoded single source of truth (mirrors
   // rss-site src/lib/booking.ts). Google Calendar appointment schedule (Google

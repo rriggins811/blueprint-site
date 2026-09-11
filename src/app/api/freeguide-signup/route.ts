@@ -53,7 +53,7 @@ const SignupSchema = z.object({
 //
 // We do NOT create the Supabase auth user here. The user is created on
 // /activate when they set a password. This means until they activate they
-// have no auth account, no course_access, and no SeniorSafe trial.
+// have no auth account, no course_access, and no Hammock365 trial.
 // applyFreeTierSetup runs on the /activate POST instead.
 //
 // Always returns 200 to the form unless input is invalid.

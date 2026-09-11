@@ -23,7 +23,7 @@ function friendlyAuthError(errorCode: string | null, fallback: string): string {
 // (Google SSO, ?code) callbacks, all exchanged through the SSR cookie client so
 // the session is actually set. If the user has no course_access yet (first-time
 // Google SSO signup), runs the same onboarding the email signup form runs:
-// free-tier course_access + SeniorSafe trial start + fan-out via after(). Then
+// free-tier course_access + Hammock365 trial start + fan-out via after(). Then
 // redirects to a sanitized ?next= (default /dashboard).
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
     if (!hasAnyAccess(access)) {
       // First-time landing — most commonly an OAuth (Google) user that
       // bypassed /freeguide. Set up free-tier course_access, start the
-      // SeniorSafe trial, fire the fan-out.
+      // Hammock365 trial, fire the fan-out.
       const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
       const fullName =
         typeof meta.full_name === "string" && meta.full_name

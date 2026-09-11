@@ -47,7 +47,7 @@ export default async function ActivatePage({
       </h1>
       <p className="mt-3 text-sm text-neutral-600">
         Unlock Module 00 and your three free tools. The same login works in
-        SeniorSafeApp on iPhone and Android.
+        Hammock365 on iPhone and Android.
       </p>
 
       {error ? (

@@ -1,10 +1,10 @@
-// Pure helpers for reading SeniorSafe trial state off a user_profile row.
+// Pure helpers for reading Hammock365 trial state off a user_profile row.
 // Never mutates anything. The Blueprint dashboard reads this to render the
 // cross-product banner. The actual trial mutations live in onboard-free-user.ts
 // and the Stripe webhook handler.
 
 export const SENIORSAFE_TRIAL_DAYS = 14;
-export const SENIORSAFE_APP_URL = "https://app.seniorsafeapp.com";
+export const SENIORSAFE_APP_URL = "https://app.hammock365.com";
 
 export type SeniorsafeProfileFields = {
   subscription_tier: string | null;
