@@ -13,6 +13,11 @@ function getClient(): Resend | null {
 const FROM_ADDRESS =
   process.env.RESEND_FROM_ADDRESS ?? "Ryan Riggins <ryan@rigginsstrategicsolutions.com>";
 
+// CAN-SPAM postal line for email footers. Riggins Strategic Solutions is a
+// d/b/a of Riggins Properties LLC; the address is the LLC's registered agent.
+const POSTAL_LINE =
+  "Riggins Properties LLC d/b/a Riggins Strategic Solutions, 4030 Wake Forest Rd Ste 349, Raleigh, NC 27609";
+
 export type SendResult = { ok: true; id: string } | { ok: false; reason: string };
 
 async function send(args: {
@@ -205,7 +210,7 @@ export async function sendIntakeInviteToApplicant(args: {
     <hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0;">
     <p style="font-size:11px;color:#888;">
       Ryan Riggins | NC Real Estate License #361546 | eXp Realty<br>
-      Riggins Strategic Solutions, LLC, Greensboro, NC<br>
+      ${POSTAL_LINE}<br>
       This is educational and not a substitute for legal, financial, tax, or medical advice.<br>
       You're receiving this because you applied for the Senior Transition Roadmap at rigginsstrategicsolutions.com. To stop receiving emails, reply with "unsubscribe."
     </p>
@@ -232,7 +237,7 @@ Riggins Strategic Solutions
 
 ---
 Ryan Riggins | NC Real Estate License #361546 | eXp Realty
-Riggins Strategic Solutions, LLC, Greensboro, NC
+${POSTAL_LINE}
 This is educational and not a substitute for legal, financial, tax, or medical advice.
 You're receiving this because you applied for the Senior Transition Roadmap at rigginsstrategicsolutions.com. To stop receiving emails, reply with "unsubscribe."
 `;
@@ -275,6 +280,7 @@ export async function sendCoreWelcomeEmail(args: {
     ${SENIORSAFE_TRIAL_SECTION}
     <p>Ryan</p>
     <p style="color:#888;font-size:12px;">Riggins Strategic Solutions</p>
+    <p style="color:#888;font-size:11px;">${POSTAL_LINE}</p>
   `;
   // Explicit plain-text part: stripHtml would delete <a href> and keep only the
   // anchor text, erasing the login URL. Mirror the HTML with the literal URLs.
@@ -296,7 +302,10 @@ A few things to know:
 Plus: the Hammock365 family app is free to start, forever: https://app.hammock365.com
 
 Ryan
-Riggins Strategic Solutions`;
+Riggins Strategic Solutions
+
+---
+${POSTAL_LINE}`;
   return send({ to: args.to, subject, html, text });
 }
 
@@ -524,6 +533,8 @@ export async function sendFreeGuideEmail(args: {
     (336) 553-8933
   </p>
 
+  <p style="font-size: 11px; color: #888;">${POSTAL_LINE}</p>
+
 </body>
 </html>
   `;
@@ -558,6 +569,9 @@ The Hammock365 app trial includes daily wellness check-ins, secure document vaul
 Ryan Riggins
 Riggins Strategic Solutions
 (336) 553-8933
+
+---
+${POSTAL_LINE}
 `;
 
   return send({ to: args.to, subject, html, text });
@@ -602,6 +616,7 @@ export async function sendMapAccessEmail(args: {
     <p>Ryan<br><span style="color:#888;font-size:12px;">Riggins Strategic Solutions</span></p>
     <hr style="border:none;border-top:1px solid #e5e5e5;margin:28px 0;" />
     <p style="font-size:12px;color:#888;">Prefer to jump straight to the map without logging in? Use your private link: <a href="${args.accessUrl}" style="word-break:break-all;color:#1F3A5F;">${args.accessUrl}</a></p>
+    <p style="font-size:11px;color:#888;">${POSTAL_LINE}</p>
   `;
   const fallbackText = args.loginUrl
     ? `\n(That link logs you in automatically and expires after a while. You can always sign in later at ${dashboardUrl})\n`
@@ -624,7 +639,9 @@ Riggins Strategic Solutions
 
 ---
 Prefer to jump straight to the map without logging in? Your private link:
-${args.accessUrl}`;
+${args.accessUrl}
+
+${POSTAL_LINE}`;
   return send({ to: args.to, subject, html, text });
 }
 
@@ -667,6 +684,7 @@ export async function sendPremiumWelcomeEmail(args: {
     <p>I will email you the day before our call. Until then, reply to this email if you need anything.</p>
     <p>Ryan</p>
     <p style="color:#888;font-size:12px;">Riggins Strategic Solutions. You have Premium support until 90 days from your purchase date.</p>
+    <p style="color:#888;font-size:11px;">${POSTAL_LINE}</p>
   `;
   // Explicit plain-text part so the login + dashboard URLs survive (stripHtml
   // would keep only the anchor text and drop the hrefs).
@@ -687,6 +705,9 @@ ${fallbackText}
 I will email you the day before our call. Until then, reply to this email if you need anything.
 
 Ryan
-Riggins Strategic Solutions. You have Premium support until 90 days from your purchase date.`;
+Riggins Strategic Solutions. You have Premium support until 90 days from your purchase date.
+
+---
+${POSTAL_LINE}`;
   return send({ to: args.to, subject, html, text });
 }

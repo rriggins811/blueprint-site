@@ -48,7 +48,7 @@ export function PublicFooter({
           Ryan Riggins | Licensed NC Realtor #361546 | eXp Realty. Education,
           not legal, tax, or financial advice.
         </p>
-        <p className="mt-1 text-xs">&copy; 2026 Riggins Strategic Solutions, LLC</p>
+        <p className="mt-1 text-xs">&copy; 2026 Riggins Properties LLC d/b/a Riggins Strategic Solutions</p>
       </div>
     </footer>
   );
