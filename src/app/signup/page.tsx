@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { signupFree } from "./actions";
 import { PublicFooter } from "@/components/PublicFooter";
+import { UtmHiddenFields } from "@/components/UtmHiddenFields";
 
 export const metadata = {
   title: "Create your free account",
@@ -13,7 +14,9 @@ export const metadata = {
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; email?: string }>;
+  searchParams: Promise<
+    { error?: string; email?: string } & Record<string, string | string[] | undefined>
+  >;
 }) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -50,6 +53,7 @@ export default async function SignupPage({
         ) : null}
 
         <form action={signupFree} className="mt-8 flex flex-col gap-4">
+          <UtmHiddenFields params={params} />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label

@@ -16,6 +16,7 @@ import { after } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { applyFreeTierSetup } from "@/lib/onboard-free-user";
 import { fireServerLead } from "@/lib/meta/server-fires";
+import { bookTagsFromForm, tagBookReader } from "@/lib/book-attribution";
 
 // Captured at signup so the nurture can branch from day one instead of waiting
 // a month for click data. Also tells us what ad spend is actually buying.
@@ -138,6 +139,8 @@ export async function signupFree(formData: FormData) {
     source: "blueprint-free-signup",
   });
   after(setup.fanout);
+  // Readers who came in through a printed-book link get `book-reader` in GHL.
+  after(tagBookReader(email, firstName, bookTagsFromForm(formData)));
 
   after(
     fireServerLead({

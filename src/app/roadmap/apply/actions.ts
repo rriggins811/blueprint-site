@@ -25,6 +25,7 @@ import {
 } from "@/lib/email/resend";
 import { mintIntakeToken } from "@/lib/intake-token";
 import { SITE } from "@/lib/site";
+import { bookTagsFromForm } from "@/lib/book-attribution";
 
 // GHL contact custom field "Intake URL" (created Aug 12 2026). Addressed by
 // ID, not fieldKey: a fieldKey-shaped payload returns 201 and stores nothing.
@@ -113,6 +114,8 @@ export async function submitRoadmapApplication(formData: FormData) {
   }
 
   const app = parsed.data;
+  // Printed-book readers (utm_source=book) also get `book-reader` in GHL.
+  const bookTags = bookTagsFromForm(formData);
   const admin = createAdminSupabaseClient();
 
   const { data: inserted, error: insertError } = await admin
@@ -170,7 +173,7 @@ export async function submitRoadmapApplication(formData: FormData) {
           },
           // "family" + "roadmap" are the canonical identity/funnel tags of the
           // Partner-CRM scheme (Jul 26 2026) — they power the Families smart list.
-          ["roadmap-application", "stage-new-lead", "family", "roadmap"]
+          ["roadmap-application", "stage-new-lead", "family", "roadmap", ...bookTags]
         );
 
         if (upsert.ok) {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { submitRoadmapApplication } from "./actions";
 import { PublicFooter } from "@/components/PublicFooter";
+import { UtmHiddenFields } from "@/components/UtmHiddenFields";
 
 export const metadata = {
   title: "Apply for your free Senior Transition Roadmap",
@@ -15,9 +16,10 @@ const labelCls = "mb-1 block text-sm font-medium text-neutral-700";
 export default async function RoadmapApplyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string } & Record<string, string | string[] | undefined>>;
 }) {
-  const { error } = await searchParams;
+  const params = await searchParams;
+  const { error } = params;
 
   return (
     <>
@@ -53,6 +55,7 @@ export default async function RoadmapApplyPage({
         ) : null}
 
         <form action={submitRoadmapApplication} className="mt-10 flex flex-col gap-6">
+          <UtmHiddenFields params={params} />
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="firstName" className={labelCls}>
